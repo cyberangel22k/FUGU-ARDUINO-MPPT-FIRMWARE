@@ -102,6 +102,10 @@ Adafruit_ADS1115 ads;             //SYSTEM PARAMETER  - ADS1115 ADC Library (By:
 #define buttonRight     17          //SYSTEM PARAMETER -
 #define buttonBack      19          //SYSTEM PARAMETER - 
 #define buttonSelect    23          //SYSTEM PARAMETER -
+#define BLYNK_TEMPLATE_ID "your_blynk_template_id"
+#define BLYNK_DEVICE_NAME "your_blynk_device_name"
+#define BLYNK_AUTH_TOKEN "your_blynk_auth_token"
+#define BLYNK_PRINT Serial
 
 //========================================= WiFi SSID ==============================================//
 // This MPPT firmware uses the Blynk phone app and arduino library for controls and data telemetry  //
