@@ -16,24 +16,23 @@ void Wireless_Telemetry(){
     if(IUV==0)             {LED4=200;}else{LED4=0;}  //PV INPUT PRESENCE STATUS
 
     Blynk.run();  
-    Blynk.virtualWrite(1,powerInput); 
-    Blynk.virtualWrite(2,batteryPercent);
-    Blynk.virtualWrite(3,voltageInput);    
-    Blynk.virtualWrite(4,currentInput);   
-    Blynk.virtualWrite(5,voltageOutput); 
-    Blynk.virtualWrite(6,currentOutput); 
-    Blynk.virtualWrite(7,temperature); 
-    Blynk.virtualWrite(8,Wh/1000); 
-    Blynk.virtualWrite(9,energySavings);       
-    Blynk.virtualWrite(10,LED1);               //LED - Battery Charging Status
-    Blynk.virtualWrite(11,LED2);               //LED - Full Battery Charge Status
-    Blynk.virtualWrite(12,LED3);               //LED - Low Battery Charge Status
-    Blynk.virtualWrite(13,LED4);               //LED - PV Harvesting
-    
-    Blynk.virtualWrite(14,voltageBatteryMin);  //Minimum Battery Voltage (Read & Write)
-    Blynk.virtualWrite(15,voltageBatteryMax);  //Maximum Battery Voltage (Read & Write)
-    Blynk.virtualWrite(16,currentCharging);    //Charging Current  (Read & Write)
-    Blynk.virtualWrite(17,electricalPrice);    //Electrical Price  (Write)
+    Blynk.virtualWrite(V1,powerInput); 
+    Blynk.virtualWrite(V2,batteryPercent);
+    Blynk.virtualWrite(V3,voltageInput);    
+    Blynk.virtualWrite(V4,currentInput);   
+    Blynk.virtualWrite(V5,voltageOutput); 
+    Blynk.virtualWrite(V6,currentOutput); 
+    Blynk.virtualWrite(V7,temperature); 
+    Blynk.virtualWrite(V8,Wh/1000); 
+    Blynk.virtualWrite(V9,energySavings);       
+    Blynk.virtualWrite(V10,LED1);               //LED - Battery Charging Status
+    Blynk.virtualWrite(V11,LED2);               //LED - Full Battery Charge Status
+    Blynk.virtualWrite(V12,LED3);               //LED - Low Battery Charge Status
+    Blynk.virtualWrite(V13,LED4);               //LED - PV Harvesting
+    Blynk.virtualWrite(V14,voltageBatteryMin);  //Minimum Battery Voltage (Read & Write)
+    Blynk.virtualWrite(V15,voltageBatteryMax);  //Maximum Battery Voltage (Read & Write)
+    Blynk.virtualWrite(V16,currentCharging);    //Charging Current  (Read & Write)
+    Blynk.virtualWrite(V17,electricalPrice);    //Electrical Price  (Write)
   }
   ////////// WIFI TELEMETRY ////////// 
   if(enableBluetooth==1){
