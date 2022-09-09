@@ -6,7 +6,7 @@ I have modified the firmware and published here for anyone to use.
 
 Changelog:
 
--set ADS1115 as default parameter (ADS1115 is actually cheaper now and easier to buy than ADS1015)
+-set ADS1115 as default parameter (ADS1115 is actually cheaper now and easier to buy than ADS1015) NOTE: Change the values if you are using ADS1015
 
 -added support for latest blynk (you need to create your own widgets in blynk console)
 
