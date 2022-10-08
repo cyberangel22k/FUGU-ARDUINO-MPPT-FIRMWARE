@@ -22,7 +22,7 @@ BLYNK_CONNECTED() {
 }
 
 void UpTime() {
-  Blynk.virtualWrite(V18, millis() / 1000);  // Send UpTime seconds to App (you can create a new widget in blynk for uptime)
+  Blynk.virtualWrite(V19, millis() / 1000);  // Send UpTime seconds to App (you can create a new widget in blynk for uptime)
   Serial.print("UpTime: ");
   Serial.println(millis() / 1000);  // Send UpTime seconds to Serial
 }
@@ -70,6 +70,7 @@ void Wireless_Telemetry(){
     Blynk.virtualWrite(V15, voltageBatteryMax);  //Maximum Battery Voltage (Read & Write)
     Blynk.virtualWrite(V16, currentCharging);    //Charging Current  (Read & Write)
     Blynk.virtualWrite(V17, electricalPrice);    //Electrical Price  (Write)
+    Blynk.virtualWrite(V18, daysRunning);        //Send number of days running to App
   }
   ////////// BLUETOOTH TELEMETRY ////////// 
   if(enableBluetooth==1){
