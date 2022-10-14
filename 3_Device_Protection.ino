@@ -31,6 +31,6 @@ void Device_Protection(){
   else{                                                                                             //Charger MODE specific protection protocol
     backflowControl();                                                                              //Enable backflow current detection & control                           
     if(voltageOutput<vInSystemMin)                   {BNC=1;ERR++;}      else{BNC=0;}               //BNC - BATTERY NOT CONNECTED (for charger mode only, does not treat BNC as error when not under MPPT mode)
-    if(voltageInput<voltageBatteryMax+voltageDropout){IUV=1;ERR++;REC=1;}else{IUV=0;}               //IUV - INPUT UNDERVOLTAGE: Input voltage is below max battery charging voltage (for charger mode only)     
+    if(voltageInput<voltageOutput+voltageDropout){IUV=1;ERR++;REC=1;}else{IUV=0;}                   //IUV - INPUT UNDERVOLTAGE: Input voltage is below max battery charging voltage (for charger mode only)     
   } 
 }
