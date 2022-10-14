@@ -11,3 +11,5 @@ Changelog:
 -added support for latest blynk (you need to create your own widgets in blynk console)
 
 -added reconnect function for wifi and blynk when device gets offline
+
+-added days running in Blynk Iot App
