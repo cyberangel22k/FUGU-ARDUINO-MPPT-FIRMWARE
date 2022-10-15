@@ -44,6 +44,8 @@ void factoryReset(){
   EEPROM.write(11,1); //STORE: Enable autoload (on by default)
   EEPROM.write(13,0); //STORE: LCD backlight sleep timer (default: 0 = never)
   EEPROM.commit();
+  WiFiManager wm;
+  wm.resetSettings();
   loadSettings();
 }
 
