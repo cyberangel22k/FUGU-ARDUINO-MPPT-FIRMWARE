@@ -7,8 +7,16 @@ BlynkTimer timer;
 void setupWiFi(){
   if(enableWiFi==1){
     Serial.begin(baudRate);
-    WiFi.begin(ssid, pass);
-    Serial.println("Connecting to WiFi ..");
+    Serial.println("Setting up WiFi access point...");
+    WiFiManager wm;
+    bool res;
+    res = wm.autoConnect("FUGU DIY MPPT"); // FUGU DIY MPPT Access point name
+    if(!res) {
+        Serial.println("Failed to connect");
+    } 
+    else {
+        Serial.println("Connected to WiFi");
+    }
     Blynk.config(auth, "blynk.cloud", 80);
     Blynk.connect();
     timer.setInterval(1000L, UpTime);
