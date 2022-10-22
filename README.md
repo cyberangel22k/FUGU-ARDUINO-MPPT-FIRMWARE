@@ -5,10 +5,12 @@ This is a clone from https://github.com/AngeloCasi/FUGU-ARDUINO-MPPT-FIRMWARE.gi
 I have modified the firmware and published here for anyone to use.
 
 Required libraries:
-https://github.com/blynkkk/blynk-library
+![Blynk ESP32 Library](https://github.com/blynkkk/blynk-library)
 https://github.com/fdebrabander/Arduino-LiquidCrystal-I2C-library
 https://github.com/adafruit/Adafruit_ADS1X15
 https://github.com/tzapu/WiFiManager
+
+![Release](https://github.com/cyberangel22k/FUGU-ARDUINO-MPPT-FIRMWARE/releases)
 
 Changelog:
 
