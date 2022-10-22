@@ -4,6 +4,12 @@ An open source Arduino ESP32 MPPT Solar Charge Controller firmware equipped with
 This is a clone from https://github.com/AngeloCasi/FUGU-ARDUINO-MPPT-FIRMWARE.git
 I have modified the firmware and published here for anyone to use.
 
+Required libraries:
+https://github.com/blynkkk/blynk-library
+https://github.com/fdebrabander/Arduino-LiquidCrystal-I2C-library
+https://github.com/adafruit/Adafruit_ADS1X15
+https://github.com/tzapu/WiFiManager
+
 Changelog:
 
 -set ADS1115 as default parameter (ADS1115 is actually cheaper now and easier to buy than ADS1015) NOTE: Change the values if you are using ADS1015
