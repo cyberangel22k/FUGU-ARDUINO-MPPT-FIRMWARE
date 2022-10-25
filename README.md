@@ -13,7 +13,15 @@ Required libraries:
 
 ## [Release](https://github.com/cyberangel22k/FUGU-ARDUINO-MPPT-FIRMWARE/releases)
 
-Changelog:
+## Usage
+Assuming you have already built the FUGU MPPT Solar Charge Controller using AngeloCasi's guide, here are the steps flashing this firmware version:
+1. Edit user parameters in Arduino IDE such as Blynk authentication code, battery parameters (if you are using the non-lcd version), etc...
+2. Flash the firmware to the device
+3. Perform factory reset
+4. If you use the LCD version, set your parameters in the setting.
+5. Using a phone or Laptop, connect wifi to the "FUGU DIY MPPT" access point. There is no password needed. Once connected, you will be redirected to a configuration page to setup WiFi connection. Select your WiFi access point and input your WiFi password and connect. The device should now be connected to the internet. In case you change your WiFi SSID or password, perform a factory reset to reset the saved WiFi credentials.
+
+## Changelog:
 
 * set ADS1115 as default parameter (ADS1115 is actually cheaper now and easier to buy than ADS1015) NOTE: Change the values if you are using ADS1015
 * added support for latest blynk (you need to create your own widgets in blynk console)
