@@ -370,4 +370,5 @@ void loop() {
   Onboard_Telemetry();    //TAB#6 - Onboard telemetry (USB & Serial Telemetry)
   LCD_Menu();             //TAB#8 - Low Power Algorithm
   timer.run();            //Blynk Timer
+  Blynk.run();
 }
