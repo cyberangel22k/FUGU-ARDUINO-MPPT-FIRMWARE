@@ -78,3 +78,40 @@ void Wireless_Telemetry(){
   }
   
 }
+
+BLYNK_WRITE(V21) 
+{
+  if(param.asInt() == 1) {
+    output_Mode=0;
+  }
+  else{
+    output_Mode=1;
+  }
+}
+
+BLYNK_WRITE(V22) 
+{
+  if(param.asInt() == 1) {
+    voltageBatteryMax++;
+  }
+}
+
+BLYNK_WRITE(V23) 
+{
+  if(param.asInt() == 1) {
+    voltageBatteryMax--;
+  }
+}
+BLYNK_WRITE(V24) 
+{
+  if(param.asInt() == 1) {
+    voltageBatteryMin++;
+  }
+}
+
+BLYNK_WRITE(V25) 
+{
+  if(param.asInt() == 1) {
+    voltageBatteryMin--;
+  }
+}
