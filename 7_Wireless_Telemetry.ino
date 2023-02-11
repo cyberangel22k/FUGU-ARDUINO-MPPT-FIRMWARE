@@ -43,7 +43,7 @@ void Wireless_Telemetry(){
   }
 
   if(WIFI==1){
-    int LED1, LED2, LED3, LED4;                      //Declare LED brightness variable 
+    int LED1, LED2, LED3, LED4, LED5;                      //Declare LED brightness variable 
     if(buckEnable==1)      {LED1=200;}else{LED1=0;}  //BATTERY CHARGING STATUS
     if(batteryPercent>=99 ){LED2=200;}else{LED2=0;}  //FULL CHARGE STATUS
     if(batteryPercent<=10) {LED3=200;}else{LED3=0;}  //LOW BATTERY STATUS
