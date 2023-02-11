@@ -28,7 +28,6 @@ BLYNK_CONNECTED() {
 
 void Wireless_Telemetry(){
   if (Blynk.connected()) {  // If connected run as normal
-    Blynk.run();
   } else if (ReCnctFlag == 0) {  // If NOT connected and not already trying to reconnect, set timer to try to reconnect in 30 seconds
     WIFI = 0;
     ReCnctFlag = 1;  // Set reconnection Flag
@@ -49,6 +48,7 @@ void Wireless_Telemetry(){
     if(batteryPercent>=99 ){LED2=200;}else{LED2=0;}  //FULL CHARGE STATUS
     if(batteryPercent<=10) {LED3=200;}else{LED3=0;}  //LOW BATTERY STATUS
     if(IUV==0)             {LED4=200;}else{LED4=0;}  //PV INPUT PRESENCE STATUS
+    if(output_Mode==0)     {LED5=200;}else{LED5=0;}  //PSU MODE STATUS
 
     Blynk.run();  
     Blynk.virtualWrite(V1, powerInput); 
@@ -69,7 +69,8 @@ void Wireless_Telemetry(){
     Blynk.virtualWrite(V16, currentCharging);    //Charging Current  (Read & Write)
     Blynk.virtualWrite(V17, electricalPrice);    //Electrical Price  (Write)
     Blynk.virtualWrite(V18, daysRunning);        //Send number of days running to App
-    Blynk.virtualWrite(V19, millis()/1000);  // Send UpTime seconds to App (you can create a new widget in blynk for uptime)
+    Blynk.virtualWrite(V19, millis()/1000);      //Send UpTime seconds to App
+    Blynk.virtualWrite(V20, LED5);
   }
   ////////// BLUETOOTH TELEMETRY ////////// 
   if(enableBluetooth==1){
