@@ -50,7 +50,6 @@ void Wireless_Telemetry(){
     if(IUV==0)             {LED4=200;}else{LED4=0;}  //PV INPUT PRESENCE STATUS
     if(output_Mode==0)     {LED5=200;}else{LED5=0;}  //PSU MODE STATUS
 
-    Blynk.run();  
     Blynk.virtualWrite(V1, powerInput); 
     Blynk.virtualWrite(V2, batteryPercent);
     Blynk.virtualWrite(V3, voltageInput);    
