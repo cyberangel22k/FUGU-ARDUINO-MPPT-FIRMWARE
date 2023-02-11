@@ -2,8 +2,6 @@
 int ReCnctFlag;  // Reconnection Flag
 int ReCnctCount = 0;  // Reconnection counter
 
-BlynkTimer timer;
-
 void setupWiFi(){
   if(enableWiFi==1){
     Serial.begin(baudRate);
@@ -19,7 +17,6 @@ void setupWiFi(){
     }
     Blynk.config(auth, "blynk.cloud", 80);
     Blynk.connect();
-    timer.setInterval(1000L, UpTime);
     }
 }
 
@@ -29,14 +26,7 @@ BLYNK_CONNECTED() {
   WIFI = 1;
 }
 
-void UpTime() {
-  Blynk.virtualWrite(V19, millis() / 1000);  // Send UpTime seconds to App (you can create a new widget in blynk for uptime)
-  Serial.print("UpTime: ");
-  Serial.println(millis() / 1000);  // Send UpTime seconds to Serial
-}
-
 void Wireless_Telemetry(){
-  timer.run();
   if (Blynk.connected()) {  // If connected run as normal
     Blynk.run();
   } else if (ReCnctFlag == 0) {  // If NOT connected and not already trying to reconnect, set timer to try to reconnect in 30 seconds
@@ -79,6 +69,7 @@ void Wireless_Telemetry(){
     Blynk.virtualWrite(V16, currentCharging);    //Charging Current  (Read & Write)
     Blynk.virtualWrite(V17, electricalPrice);    //Electrical Price  (Write)
     Blynk.virtualWrite(V18, daysRunning);        //Send number of days running to App
+    Blynk.virtualWrite(V19, millis()/1000);  // Send UpTime seconds to App (you can create a new widget in blynk for uptime)
   }
   ////////// BLUETOOTH TELEMETRY ////////// 
   if(enableBluetooth==1){
