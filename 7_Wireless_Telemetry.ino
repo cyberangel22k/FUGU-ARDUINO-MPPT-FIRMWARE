@@ -79,10 +79,10 @@ void Wireless_Telemetry(){
     Blynk.virtualWrite(V20, LED5);
     
     if(button21==1)         {output_Mode=0;}else{output_Mode=1;}
-    if(button22==1)         {voltageBatteryMax+=0.1;}
-    if(button23==1)         {voltageBatteryMax-=0.1;}
-    if(button24==1)         {voltageBatteryMin+=0.1;}
-    if(button25==1)         {voltageBatteryMin-=0.1;}
+    if(button22==1)         {voltageBatteryMax+=0.1;saveSettings();}
+    if(button23==1)         {voltageBatteryMax-=0.1;saveSettings();}
+    if(button24==1)         {voltageBatteryMin+=0.1;saveSettings();}
+    if(button25==1)         {voltageBatteryMin-=0.1;saveSettings();}
   }
   ////////// BLUETOOTH TELEMETRY ////////// 
   if(enableBluetooth==1){
