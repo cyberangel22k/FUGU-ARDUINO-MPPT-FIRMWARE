@@ -103,17 +103,19 @@ Adafruit_ADS1115 ads;             //SYSTEM PARAMETER  - ADS1115 ADC Library (By:
 #define buttonRight     17          //SYSTEM PARAMETER -
 #define buttonBack      19          //SYSTEM PARAMETER - 
 #define buttonSelect    23          //SYSTEM PARAMETER -
-
-//====================================== BLYNK PARAMETERS ==========================================//
-
 #define BLYNK_TEMPLATE_ID "your_blynk_template_id"
 #define BLYNK_DEVICE_NAME "your_blynk_device_name"
 #define BLYNK_AUTH_TOKEN "your_blynk_auth_token"
 #define BLYNK_PRINT Serial
-
 BlynkTimer timer;
 
-char auth[] = "";   //   USER PARAMETER - Input Blynk Authentication Token
+//========================================= WiFi SSID ==============================================//
+// This MPPT firmware uses the Blynk phone app and arduino library for controls and data telemetry  //
+// Fill in your WiFi SSID and password. You will also have to get your own authentication token     //
+// from email after registering from the Blynk platform.                                            //
+//==================================================================================================//
+char 
+auth[] = "InputBlynkAuthenticationToken";   //   USER PARAMETER - Input Blynk Authentication Token (From email after registration)
 
 //====================================== USER PARAMETERS ==========================================//
 // The parameters below are the default parameters used when the MPPT charger settings have not    //
@@ -184,7 +186,7 @@ efficiencyRate          = 1.0000,     //  CALIB PARAMETER - Theroretical Buck Ef
 currentMidPoint         = 2.5250,     //  CALIB PARAMETER - Current Sensor Midpoint (V)
 currentSens             = 0.0000,     //  CALIB PARAMETER - Current Sensor Sensitivity (V/A)
 currentSensV            = 0.0660,     //  CALIB PARAMETER - Current Sensor Sensitivity (mV/A)
-vInSystemMin            = 8.0000;     //  CALIB PARAMETER - 
+vInSystemMin            = 10.000;     //  CALIB PARAMETER - 
 
 //===================================== SYSTEM PARAMETERS =========================================//
 // Do not change parameter values in this section. The values below are variables used by system   //
@@ -299,9 +301,9 @@ void coreTwo(void * pvParameters){
  setupWiFi();                                              //TAB#7 - WiFi Initialization
 //================= CORE0: LOOP (DUAL CORE MODE) ======================//
   while(1){
-    Wireless_Telemetry();                                   //TAB#7 - Wireless telemetry (WiFi & Bluetooth)
-    
-}}
+    timer.setInterval(1000L, Wireless_Telemetry);                                   //TAB#7 - Wireless telemetry (WiFi & Bluetooth) 
+  }
+}
 //================== CORE1: SETUP (DUAL CORE MODE) ====================//
 void setup() { 
   
@@ -369,6 +371,5 @@ void loop() {
   Charging_Algorithm();   //TAB#5 - Battery Charging Algorithm                    
   Onboard_Telemetry();    //TAB#6 - Onboard telemetry (USB & Serial Telemetry)
   LCD_Menu();             //TAB#8 - Low Power Algorithm
-  timer.run();            //Blynk Timer
-  Blynk.run();
+  timer.run();
 }
