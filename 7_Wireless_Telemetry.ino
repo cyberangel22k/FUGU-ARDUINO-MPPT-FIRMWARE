@@ -2,6 +2,13 @@
 int ReCnctFlag;  // Reconnection Flag
 int ReCnctCount = 0;  // Reconnection counter
 
+bool
+button21 = 0,
+button22 = 0,
+button23 = 0,
+button24 = 0,
+button25 = 0;
+
 void setupWiFi(){
   if(enableWiFi==1){
     Serial.begin(baudRate);
@@ -14,25 +21,17 @@ void setupWiFi(){
     } 
     else {
         Serial.println("Connected to WiFi");
-    }
+     }
     Blynk.config(auth, "blynk.cloud", 80);
     Blynk.connect();
     }
-}
-
-BLYNK_CONNECTED() {
-  Serial.println("Connected");
-  ReCnctCount = 0;
-  WIFI = 1;
-}
-
-void Wireless_Telemetry(){
-  if (Blynk.connected()) {  // If connected run as normal
-  } else if (ReCnctFlag == 0) {  // If NOT connected and not already trying to reconnect, set timer to try to reconnect in 30 seconds
+  if (Blynk.connected()) {
+    Blynk.run();
+  } else if (ReCnctFlag == 0) {  // If NOT connected and not already trying to reconnect, set timer to try to reconnect in 10 seconds
     WIFI = 0;
     ReCnctFlag = 1;  // Set reconnection Flag
     Serial.println("Starting reconnection timer in 30 seconds...");
-    timer.setTimeout(30000L, []() {  // Lambda Reconnection Timer Function
+    timer.setTimeout(10000L, []() {  // Lambda Reconnection Timer Function
       ReCnctFlag = 0;  // Reset reconnection Flag
       ReCnctCount++;  // Increment reconnection Counter
       Serial.print("Attempting reconnection #");
@@ -41,7 +40,15 @@ void Wireless_Telemetry(){
       Blynk.connect();  // Try to reconnect to the server
     });  // END Timer Function
   }
+}
 
+BLYNK_CONNECTED(){
+  Serial.println("Connected to Blynk Server");
+  ReCnctCount = 0;
+  WIFI = 1;
+}
+
+void Wireless_Telemetry(){
   if(WIFI==1){
     int LED1, LED2, LED3, LED4, LED5;                      //Declare LED brightness variable 
     if(buckEnable==1)      {LED1=200;}else{LED1=0;}  //BATTERY CHARGING STATUS
@@ -70,6 +77,12 @@ void Wireless_Telemetry(){
     Blynk.virtualWrite(V18, daysRunning);        //Send number of days running to App
     Blynk.virtualWrite(V19, millis()/1000);      //Send UpTime seconds to App
     Blynk.virtualWrite(V20, LED5);
+    
+    if(button21==1)         {output_Mode=0;}else{output_Mode=1;}
+    if(button22==1)         {voltageBatteryMax+=0.1;}
+    if(button23==1)         {voltageBatteryMax-=0.1;}
+    if(button24==1)         {voltageBatteryMin+=0.1;}
+    if(button25==1)         {voltageBatteryMin-=0.1;}
   }
   ////////// BLUETOOTH TELEMETRY ////////// 
   if(enableBluetooth==1){
@@ -78,39 +91,47 @@ void Wireless_Telemetry(){
   
 }
 
-BLYNK_WRITE(V21) 
-{
-  if(param.asInt() == 1) {
-    output_Mode=0;
+BLYNK_WRITE(V21){
+  if(param.asInt() == 1){
+    button21=1;
   }
   else{
-    output_Mode=1;
+    button21=0;
   }
 }
 
-BLYNK_WRITE(V22) 
-{
-  if(param.asInt() == 1) {
-    voltageBatteryMax++;
+BLYNK_WRITE(V22){
+  if(param.asInt() == 1){
+    button22=1;
+  }
+  else{
+    button22=0;
   }
 }
 
-BLYNK_WRITE(V23) 
-{
-  if(param.asInt() == 1) {
-    voltageBatteryMax--;
+BLYNK_WRITE(V23){
+  if(param.asInt() == 1){
+    button23=1;
   }
-}
-BLYNK_WRITE(V24) 
-{
-  if(param.asInt() == 1) {
-    voltageBatteryMin++;
+  else{
+    button23=0;
   }
 }
 
-BLYNK_WRITE(V25) 
-{
+BLYNK_WRITE(V24){
+  if(param.asInt() == 1){
+    button24=1;
+  }
+  else{
+    button24=0;
+  }
+}
+
+BLYNK_WRITE(V25){
   if(param.asInt() == 1) {
-    voltageBatteryMin--;
+    button25=1;
+  }
+  else{
+    button25=0;
   }
 }
