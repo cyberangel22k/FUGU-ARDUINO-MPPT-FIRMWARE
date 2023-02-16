@@ -29,3 +29,5 @@ Assuming you have already built the FUGU MPPT Solar Charge Controller using Ange
 * added days running in Blynk Iot App
 * Changed IUV protection code in charger mode that prevents small voltage panels (ex: 19v panel on 12v battery) where in IUV always triggers when the voltage input reaches above maximum battery voltage setting. This makes the MPPT inefficient as it restarts the buck repeatedly. By changing the code, the MPPT algorithm does its job more efficient while maintaining the input undervoltage protection.
 * Add a wifi manager so hard coding wifi credentials into the sketch is no longer required. Wifi can be configured using a phone or computer using a web browser.
+* Added BlynkTimer to prevent disconnecting from BLynk server frequently.
+* Added buttons to adjust battery charging voltage settings in Blynk app.
