@@ -301,6 +301,8 @@ void coreTwo(void * pvParameters){
  setupWiFi();                                              //TAB#7 - WiFi Initialization
 //================= CORE0: LOOP (DUAL CORE MODE) ======================//
   while(1){
+    timer.run();
+    Blynk.run();
     timer.setInterval(1000L, Wireless_Telemetry);                                   //TAB#7 - Wireless telemetry (WiFi & Bluetooth) 
   }
 }
@@ -371,5 +373,4 @@ void loop() {
   Charging_Algorithm();   //TAB#5 - Battery Charging Algorithm                    
   Onboard_Telemetry();    //TAB#6 - Onboard telemetry (USB & Serial Telemetry)
   LCD_Menu();             //TAB#8 - Low Power Algorithm
-  timer.run();
 }
