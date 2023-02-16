@@ -26,7 +26,6 @@ void setupWiFi(){
     Blynk.connect();
     }
   if (Blynk.connected()) {
-    Blynk.run();
   } else if (ReCnctFlag == 0) {  // If NOT connected and not already trying to reconnect, set timer to try to reconnect in 10 seconds
     WIFI = 0;
     ReCnctFlag = 1;  // Set reconnection Flag
