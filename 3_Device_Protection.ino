@@ -26,7 +26,7 @@ void Device_Protection(){
 
   if(output_Mode==0){                                                                               //PSU MODE specific protection protocol
     REC = 0; BNC = 0;                                                                               //Clear recovery and battery not connected boolean identifiers
-    if(voltageInput<voltageBatteryMax+voltageDropout){IUV=1;ERR++;errorCount++;}else{IUV=0;}        //IUV - INPUT UNDERVOLTAGE: Input voltage is below battery voltage (for psu mode only)                     
+    if(voltageInput<voltageOutput+voltageDropout){IUV=1;ERR++;errorCount++;}else{IUV=0;}        //IUV - INPUT UNDERVOLTAGE: Input voltage is below battery voltage (for psu mode only)                     
   }
   else{                                                                                             //Charger MODE specific protection protocol
     backflowControl();                                                                              //Enable backflow current detection & control                           

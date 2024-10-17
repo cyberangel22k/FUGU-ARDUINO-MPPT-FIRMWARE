@@ -1,6 +1,6 @@
-#define BLYNK_TEMPLATE_ID "TMPL3EnLIFxE"
-#define BLYNK_TEMPLATE_NAME "Fugu MPPT"
-#define BLYNK_AUTH_TOKEN "PEurYIvfUO-suwoYGTNzvLJl4mW8YLNj"
+#define BLYNK_TEMPLATE_ID "BLYNK_TEMPLATE_ID"          //copy from Blynk console
+#define BLYNK_TEMPLATE_NAME "BLYNK_TEMPLATE_NAME"      //copy from Blynk console
+#define BLYNK_AUTH_TOKEN "BLYNK_AUTH_TOKEN"            //copy from Blynk console
 /*  PROJECT FUGU FIRMWARE V1.10  (DIY 1kW Open Source MPPT Solar Charge Controller)
  *  By: TechBuilder (Angelo Casimiro)
  *  FIRMWARE STATUS: Verified Stable Build Version
@@ -67,11 +67,11 @@
 // The lines below are for the Firmware Version info displayed on the MPPT's LCD Menu Interface     //
 //==================================================================================================//
 String 
-firmwareInfo      = "V1.10   ",
-firmwareDate      = "30/08/21",
+firmwareInfo      = "V1.101  ",
+firmwareDate      = "17/10/24",
 firmwareContactR1 = "www.youtube.com/",  
 firmwareContactR2 = "TechBuilder     ";        
-           
+
 //====================== ARDUINO LIBRARIES (ESP32 Compatible Libraries) ============================//
 // You will have to download and install the following libraries below in order to program the MPPT //
 // unit. Visit TechBuilder's YouTube channel for the "MPPT" tutorial.                               //
@@ -108,13 +108,8 @@ Adafruit_ADS1115 ads;             //SYSTEM PARAMETER  - ADS1115 ADC Library (By:
 #define buttonSelect    23          //SYSTEM PARAMETER -
 #define BLYNK_PRINT Serial
 
-//========================================= WiFi SSID ==============================================//
-// This MPPT firmware uses the Blynk phone app and arduino library for controls and data telemetry  //
-// Fill in your WiFi SSID and password. You will also have to get your own authentication token     //
-// from email after registering from the Blynk platform.                                            //
-//==================================================================================================//
 char 
-auth[] = "PEurYIvfUO-suwoYGTNzvLJl4mW8YLNj";   //   USER PARAMETER - Input Blynk Authentication Token (From email after registration)
+auth[] = "Input Blynk Authentication Token";   //   USER PARAMETER - Input Blynk Authentication Token (From Blynk console)
 
 //====================================== USER PARAMETERS ==========================================//
 // The parameters below are the default parameters used when the MPPT charger settings have not    //
@@ -168,7 +163,7 @@ int
 ADC_GainSelect          = 2,          //  CALIB PARAMETER - ADC Gain Selection (0→±6.144V 3mV/bit, 1→±4.096V 2mV/bit, 2→±2.048V 1mV/bit)
 avgCountVS              = 3,          //  CALIB PARAMETER - Voltage Sensor Average Sampling Count (Recommended: 3)
 avgCountCS              = 4,          //  CALIB PARAMETER - Current Sensor Average Sampling Count (Recommended: 4)
-avgCountTS              = 500;        //  CALIB PARAMETER - Temperature Sensor Average Sampling Count
+avgCountTS              = 200;        //  CALIB PARAMETER - Temperature Sensor Average Sampling Count
 float
 inVoltageDivRatio       = 40.2156,    //  CALIB PARAMETER - Input voltage divider sensor ratio (change this value to calibrate voltage sensor)
 outVoltageDivRatio      = 24.5000,    //  CALIB PARAMETER - Output voltage divider sensor ratio (change this value to calibrate voltage sensor)
