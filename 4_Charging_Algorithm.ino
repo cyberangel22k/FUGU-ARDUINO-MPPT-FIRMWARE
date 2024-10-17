@@ -21,7 +21,7 @@ void PWM_Modulation(){
     predictivePWM();                                                                 //Runs and computes for predictive pwm floor
     PWM = constrain(PWM,PPWM,pwmMaxLimited);                                         //CHARGER MODE PWM - limit floor to PPWM and ceiling to maximim allowable duty cycle)                                       
   } 
-  ledcWrite(buck_IN,PWM);                                                         //Set PWM duty cycle and write to GPIO when buck is enabled
+  ledcWrite(pwmChannel,PWM);                                                         //Set PWM duty cycle and write to GPIO when buck is enabled
   buck_Enable();                                                                     //Turn on MPPT buck (IR2104)
 }
      
