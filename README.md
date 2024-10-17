@@ -5,6 +5,7 @@ This is a clone from https://github.com/AngeloCasi/FUGU-ARDUINO-MPPT-FIRMWARE.gi
 I have modified the firmware and published here for anyone to use.
 
 Changelog:
+
 Initial release Oct. 22, 2022
 * set ADS1115 as default parameter (ADS1115 is actually cheaper now and easier to buy than ADS1015) NOTE: Change the values if you are using ADS1015
 
