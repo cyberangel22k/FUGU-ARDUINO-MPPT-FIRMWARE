@@ -7,13 +7,9 @@ void lcdBacklight(){
   if(backlightSleepMode==0){prevLCDBackLMillis = millis();}                 //Set backlight var to sleep never
   else if(backlightSleepMode==1){backLightInterval=10000;}                  //Set backlight var to sleep after 10 seconds without keypress 
   else if(backlightSleepMode==2){backLightInterval=300000;}                 //Set backlight var to sleep after 5 minutes without keypress 
-  else if(backlightSleepMode==3){backLightInterval=3600000;}                //Set backlight var to sleep after 1 hour without keypress  
-  else if(backlightSleepMode==4){backLightInterval=21600000;}               //Set backlight var to sleep after 6 hours without keypress    
-  else if(backlightSleepMode==5){backLightInterval=43200000;}               //Set backlight var to sleep after 12 hours without keypress   
-  else if(backlightSleepMode==6){backLightInterval=86400000;}               //Set backlight var to sleep after 1 day without keypress 
-  else if(backlightSleepMode==7){backLightInterval=259200000;}              //Set backlight var to sleep after 3 days without keypress 
-  else if(backlightSleepMode==8){backLightInterval=604800000;}              //Set backlight var to sleep after 1 week without keypress  
-  else if(backlightSleepMode==9){backLightInterval=2419200000;}             //Set backlight var to sleep after 1 month without keypress    
+  else if(backlightSleepMode==3 && voltageInput>=10){prevLCDBackLMillis = millis();}               //Set backlight to on during daytime
+  else if(backlightSleepMode==3 && voltageInput<=10){backLightInterval=10000;}
+
 
   if(backlightSleepMode>0 && settingMode==0){
     currentLCDBackLMillis = millis();
@@ -95,16 +91,16 @@ void factoryResetMessageLCD(){
   delay(1000);
 }
 void savedMessageLCD(){
-//  lcd.setCursor(0,0);lcd.print(" SETTINGS SAVED ");
-//  lcd.setCursor(0,1);lcd.print(" SUCCESSFULLY   ");
-//  delay(500);
-//  lcd.clear();
+lcd.setCursor(0,0);lcd.print(" SETTINGS SAVED ");
+lcd.setCursor(0,1);lcd.print(" SUCCESSFULLY   ");
+delay(500);
+lcd.clear();
 }
 void cancelledMessageLCD(){
-//  lcd.setCursor(0,0);lcd.print(" SETTINGS       ");
-//  lcd.setCursor(0,1);lcd.print(" CANCELLED      ");
-//  delay(500);
-//  lcd.clear();
+lcd.setCursor(0,0);lcd.print(" SETTINGS       ");
+lcd.setCursor(0,1);lcd.print(" CANCELLED      ");
+delay(500);
+lcd.clear();
 }
 
 ////////////////////////////////////////////  MAIN LCD MENU CODE /////////////////////////////////////////////
@@ -441,13 +437,7 @@ void LCD_Menu(){
       lcd.setCursor(2,1);
       if(backlightSleepMode==1)     {lcd.print("10 SECONDS    ");}
       else if(backlightSleepMode==2){lcd.print("5 MINUTES     ");}
-      else if(backlightSleepMode==3){lcd.print("1 HOUR        ");}
-      else if(backlightSleepMode==4){lcd.print("6 HOURS       ");}  
-      else if(backlightSleepMode==5){lcd.print("12 HOURS      ");}  
-      else if(backlightSleepMode==6){lcd.print("1 DAY         ");}
-      else if(backlightSleepMode==7){lcd.print("3 DAYS        ");}
-      else if(backlightSleepMode==8){lcd.print("1 WEEK        ");}
-      else if(backlightSleepMode==9){lcd.print("1 MONTH       ");}     
+      else if(backlightSleepMode==3){lcd.print("DAYTIME ON    ");}    
       else{lcd.print("NEVER         ");}    
       
       //SET MENU - INTMODETYPE
@@ -457,33 +447,21 @@ void LCD_Menu(){
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
         if(digitalRead(buttonRight)==1){                                                    //Right button press (increments setting values)
           backlightSleepMode++;                                                           //Increment by 1
-          backlightSleepMode = constrain(backlightSleepMode,0,9);                         //Limit settings values to a range
+          backlightSleepMode = constrain(backlightSleepMode,0,3);                         //Limit settings values to a range
           lcd.setCursor(2,1);
           if(backlightSleepMode==1)     {lcd.print("10 SECONDS    ");}
           else if(backlightSleepMode==2){lcd.print("5 MINUTES     ");}
-          else if(backlightSleepMode==3){lcd.print("1 HOUR        ");}
-          else if(backlightSleepMode==4){lcd.print("6 HOURS       ");}  
-          else if(backlightSleepMode==5){lcd.print("12 HOURS      ");}  
-          else if(backlightSleepMode==6){lcd.print("1 DAY         ");}
-          else if(backlightSleepMode==7){lcd.print("3 DAYS        ");}
-          else if(backlightSleepMode==8){lcd.print("1 WEEK        ");}
-          else if(backlightSleepMode==9){lcd.print("1 MONTH       ");}     
+          else if(backlightSleepMode==3){lcd.print("DAYTIME ON    ");}
           else{lcd.print("NEVER         ");}    
           while(digitalRead(buttonRight)==1){} 
         }
         else if(digitalRead(buttonLeft)==1){                                              //Left button press (decrements setting values)
           backlightSleepMode--;                                                           //Increment by 1
-          backlightSleepMode = constrain(backlightSleepMode,0,9);                         //Limit settings values to a range
+          backlightSleepMode = constrain(backlightSleepMode,0,3);                         //Limit settings values to a range
           lcd.setCursor(2,1);
           if(backlightSleepMode==1)     {lcd.print("10 SECONDS    ");}
           else if(backlightSleepMode==2){lcd.print("5 MINUTES     ");}
-          else if(backlightSleepMode==3){lcd.print("1 HOUR        ");}
-          else if(backlightSleepMode==4){lcd.print("6 HOURS       ");}  
-          else if(backlightSleepMode==5){lcd.print("12 HOURS      ");}  
-          else if(backlightSleepMode==6){lcd.print("1 DAY         ");}
-          else if(backlightSleepMode==7){lcd.print("3 DAYS        ");}
-          else if(backlightSleepMode==8){lcd.print("1 WEEK        ");}
-          else if(backlightSleepMode==9){lcd.print("1 MONTH       ");}     
+          else if(backlightSleepMode==3){lcd.print("DAYTIME ON    ");}   
           else{lcd.print("NEVER         ");}    
           while(digitalRead(buttonLeft)==1){} 
         }

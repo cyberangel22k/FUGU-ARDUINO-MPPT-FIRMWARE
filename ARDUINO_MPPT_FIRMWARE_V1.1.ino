@@ -1,3 +1,6 @@
+#define BLYNK_TEMPLATE_ID "TMPL3EnLIFxE"
+#define BLYNK_TEMPLATE_NAME "Fugu MPPT"
+#define BLYNK_AUTH_TOKEN "PEurYIvfUO-suwoYGTNzvLJl4mW8YLNj"
 /*  PROJECT FUGU FIRMWARE V1.10  (DIY 1kW Open Source MPPT Solar Charge Controller)
  *  By: TechBuilder (Angelo Casimiro)
  *  FIRMWARE STATUS: Verified Stable Build Version
@@ -103,11 +106,7 @@ Adafruit_ADS1115 ads;             //SYSTEM PARAMETER  - ADS1115 ADC Library (By:
 #define buttonRight     17          //SYSTEM PARAMETER -
 #define buttonBack      19          //SYSTEM PARAMETER - 
 #define buttonSelect    23          //SYSTEM PARAMETER -
-#define BLYNK_TEMPLATE_ID "your_blynk_template_id"
-#define BLYNK_DEVICE_NAME "your_blynk_device_name"
-#define BLYNK_AUTH_TOKEN "your_blynk_auth_token"
 #define BLYNK_PRINT Serial
-BlynkTimer timer;
 
 //========================================= WiFi SSID ==============================================//
 // This MPPT firmware uses the Blynk phone app and arduino library for controls and data telemetry  //
@@ -115,7 +114,7 @@ BlynkTimer timer;
 // from email after registering from the Blynk platform.                                            //
 //==================================================================================================//
 char 
-auth[] = "InputBlynkAuthenticationToken";   //   USER PARAMETER - Input Blynk Authentication Token (From email after registration)
+auth[] = "PEurYIvfUO-suwoYGTNzvLJl4mW8YLNj";   //   USER PARAMETER - Input Blynk Authentication Token (From email after registration)
 
 //====================================== USER PARAMETERS ==========================================//
 // The parameters below are the default parameters used when the MPPT charger settings have not    //
@@ -301,11 +300,9 @@ void coreTwo(void * pvParameters){
  setupWiFi();                                              //TAB#7 - WiFi Initialization
 //================= CORE0: LOOP (DUAL CORE MODE) ======================//
   while(1){
-    timer.run();
-    Blynk.run();
-    timer.setInterval(1000L, Wireless_Telemetry);                                   //TAB#7 - Wireless telemetry (WiFi & Bluetooth) 
-  }
-}
+    Wireless_Telemetry();                                   //TAB#7 - Wireless telemetry (WiFi & Bluetooth)
+    
+}}
 //================== CORE1: SETUP (DUAL CORE MODE) ====================//
 void setup() { 
   
