@@ -28,3 +28,5 @@ Update Oct. 17, 2024
 * Removed buttons to adjust battery charging voltage settings in Blynk app. This feature seems dangerous and can accidentally set the charging voltage too high because of the terrible input lag. It is better to set proper voltages using the sketch or via LCD and buttons.
 
 * Added the option for LCD daytime on (LCD on when sunlight is detected and charging starts. LCD turns off when the sun is down.) I also removed some LCD sleep timer setting.
+
+* Reduced Temperature Sensor Average Sampling Count for faster temperature sensor
