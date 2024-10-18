@@ -7,6 +7,7 @@ I have modified the firmware and published here for anyone to use.
 Changelog:
 
 Initial release Oct. 22, 2022
+
 * set ADS1115 as default parameter (ADS1115 is actually cheaper now and easier to buy than ADS1015) NOTE: Change the values if you are using ADS1015
 
 * added support for latest blynk (you need to create your own widgets in blynk console)
@@ -30,3 +31,9 @@ Update Oct. 17, 2024
 * Added the option for LCD daytime on (LCD on when sunlight is detected and charging starts. LCD turns off when the sun is down.) I also removed some LCD sleep timer setting.
 
 * Reduced Temperature Sensor Average Sampling Count for faster temperature sensor
+
+Update Oct. 18, 2024
+
+* Fixed bug where connected to WiFi notification does not appear on LCD
+
+* Changed displayConfig1 to display temperature status instead of number of days running.
