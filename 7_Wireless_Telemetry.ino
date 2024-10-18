@@ -19,9 +19,9 @@ void setupWiFi(){
         lcd.begin();
         lcd.setBacklight(HIGH);
         lcd.setCursor(0,0);
-        lcd.print("Connected to WiFi");
+        lcd.print("Connected to    ");
         lcd.setCursor(0,1);
-        lcd.print(" ");
+        lcd.print("WiFi Network    ");
         delay(1500);
         lcd.clear();
     }
