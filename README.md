@@ -18,7 +18,7 @@ Initial release Oct. 22, 2022
 
 * Changed IUV protection code in charger mode that prevents small voltage panels (ex: 19v panel on 12v battery) where in IUV always triggers when the voltage input reaches above maximum battery voltage setting. This makes the MPPT inefficient as it restarts the buck repeatedly. By changing the code, the MPPT algorithm does its job more efficient while maintaining the input undervoltage protection.
 
-* Add a wifi manager so hard coding wifi credentials into the sketch is no longer required. Wifi can be configured using a phone or computer using a web browser.
+* Add a wifi manager so hard coding wifi credentials into the sketch is no longer required. Wifi can be configured using a phone or computer using a web browser. To reset WiFi configuration, you need to perform a factory reset. In the future, I will add an additional setting to reset WiFi credentials using the LCD Display.
 
 * Added BlynkTimer to prevent disconnecting from BLynk server frequently.
 
