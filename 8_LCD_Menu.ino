@@ -38,7 +38,7 @@ void displayConfig1(){
   else if(Wh<10000000){lcd.print(MWh,2);lcd.print("MWh ");}    //9.99MWh_
   else if(Wh<100000000){lcd.print(MWh,1);lcd.print("MWh ");}   //99.9MWh_ 
   else if(Wh<1000000000){lcd.print(MWh,0);lcd.print("MWh  ");} //999MWh__
-  lcd.setCursor(13,0);lcd.print(daysRunning,0); 
+  lcd.setCursor(13,0);lcd.print(temperature);lcd.print((char)223);lcd.print("C");padding100(temperature)
   lcd.setCursor(0,1);lcd.print(batteryPercent);lcd.print("%");padding100(batteryPercent);
   if(BNC==0){lcd.setCursor(5,1); lcd.print(voltageOutput,1);lcd.print("V");padding10(voltageOutput);}
   else{lcd.setCursor(5,1);lcd.print("NOBAT ");}          
