@@ -37,3 +37,7 @@ Update Oct. 18, 2024
 * Fixed bug where connected to WiFi notification does not appear on LCD
 
 * Changed displayConfig1 to display temperature status instead of number of days running.
+
+Update Oct. 28, 2024
+
+* Fixed compilation error in LCD_Menu.ino. I forgot to include a ; in the end of the line. I also removed C (celsius) as it would not fit the LCD.
