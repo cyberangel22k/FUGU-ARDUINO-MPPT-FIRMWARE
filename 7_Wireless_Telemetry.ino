@@ -16,6 +16,7 @@ void setupWiFi(){
     } 
     else {
         Serial.println("Connected to WiFi");
+        lcd.setBacklight(HIGH);
         lcd.setCursor(0,0);lcd.print("Connected to    ");                              //Display LCD message
         lcd.setCursor(0,1);lcd.print("WiFi Network    ");                              //Display LCD message   
         delay(1500);                                                                   //For loop "loading... effect
