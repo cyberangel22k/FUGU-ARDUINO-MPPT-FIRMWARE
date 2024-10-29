@@ -10,7 +10,7 @@ Initial release Oct. 22, 2022
 
 * set ADS1115 as default parameter (ADS1115 is actually cheaper now and easier to buy than ADS1015) NOTE: Change the values if you are using ADS1015
 
-* can still work with the latest blynk (you need to create your own widgets in blynk console)
+* can still work with the latest Blynk. Blynk Legacy is dead. (you need to create your own widgets in blynk console)
 
 * added reconnect function for wifi and blynk when device gets offline
 
