@@ -4,7 +4,23 @@ An open source Arduino ESP32 MPPT Solar Charge Controller firmware equipped with
 This is a clone from https://github.com/AngeloCasi/FUGU-ARDUINO-MPPT-FIRMWARE.git
 I have modified the firmware and published here for anyone to use.
 
-Changelog:
+## Required libraries:
+[Blynk ESP32 Library](https://github.com/blynkkk/blynk-library)
+
+[Arduino-LiquidCrystal-I2C-library](https://github.com/fdebrabander/Arduino-LiquidCrystal-I2C-library)
+
+[Adafruit_ADS1X15](https://github.com/adafruit/Adafruit_ADS1X15)
+
+[WiFiManager](https://github.com/tzapu/WiFiManager)
+
+## Usage
+Assuming you have already built the FUGU MPPT Solar Charge Controller using AngeloCasi's guide, here are the steps flashing this firmware version:
+1. Edit user parameters in Arduino IDE such as Blynk authentication code, battery and other parameters (if you are using the non-lcd version), etc...
+2. Flash the firmware to the device.
+3. Connect the device to your batteries and solar panels.
+4. Perform factory reset if you have LCD and buttons and set your parameters in the settings menu. Skip to next step you don't have LCD.
+5. Using a phone or Laptop, connect WiFi to the "FUGU DIY MPPT" access point. There is no password needed. Once connected, you will be redirected to a configuration page to setup WiFi connection. Select your WiFi access point and input your WiFi password and connect. You will be disconnected automatically once it connects. Ther LCD should also prompt that WiFi is connected. In case you change the WiFi SSID or password of your router, perform a factory reset on the MPPT to reset the saved WiFi credentials. You will also be required to set everything back again. In the future, I will add a separate WiFi password reset on the settings menu to avoid losing the saved settings.
+## Changelog:
 
 Initial release Oct. 22, 2022
 
