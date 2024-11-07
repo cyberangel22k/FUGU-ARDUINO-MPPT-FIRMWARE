@@ -57,3 +57,9 @@ Update Oct. 18, 2024
 Update Oct. 28, 2024
 
 * Fixed compilation error in LCD_Menu.ino. I forgot to include a ; in the end of the line. I also removed C (celsius) as it would not fit the LCD.
+
+Update Nov. 7, 2024
+
+* Adjust fan temp trigger to 45 degrees for better efficiency
+
+* set LCD sleep timer default setting to Daytime on
