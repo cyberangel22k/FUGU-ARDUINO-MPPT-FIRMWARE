@@ -38,11 +38,11 @@ void factoryReset(){
   EEPROM.write(5,30); //STORE: Charging Current (whole)
   EEPROM.write(6,0);  //STORE: Charging Current (decimal)
   EEPROM.write(7,1);  //STORE: Fan Enable (Bool)
-  EEPROM.write(8,60); //STORE: Fan Temp (Integer)
+  EEPROM.write(8,45); //STORE: Fan Temp (Integer)
   EEPROM.write(9,90); //STORE: Shutdown Temp (Integer)
   EEPROM.write(10,1); //STORE: Enable WiFi (Boolean)
   EEPROM.write(11,1); //STORE: Enable autoload (on by default)
-  EEPROM.write(13,0); //STORE: LCD backlight sleep timer (default: 0 = never)
+  EEPROM.write(13,3); //STORE: LCD backlight sleep timer (default: 3 = Daytime On)
   EEPROM.commit();
   WiFiManager wm;
   wm.resetSettings();
