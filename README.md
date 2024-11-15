@@ -13,6 +13,9 @@ I have modified the firmware and published here for anyone to use.
 
 [WiFiManager](https://github.com/tzapu/WiFiManager)
 
+## Additional requirement:
+This sketch currently work on ESP32 library by Espressif Systems version 2.0.17 and below only. If you use updated board library, you will get errors.
+
 ## Usage
 Assuming you have already built the FUGU MPPT Solar Charge Controller using AngeloCasi's guide, here are the steps flashing this firmware version:
 1. Edit user parameters in Arduino IDE such as Blynk authentication code, battery and other parameters (if you are using the non-lcd version), etc...
