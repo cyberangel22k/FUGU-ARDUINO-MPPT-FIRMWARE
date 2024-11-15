@@ -22,7 +22,7 @@ Assuming you have already built the FUGU MPPT Solar Charge Controller using Ange
 2. Flash the firmware to the device.
 3. Connect the device to your batteries and solar panels.
 4. Perform factory reset if you have LCD and buttons and set your parameters in the settings menu. Skip to next step you don't have LCD.
-5. Using a phone or Laptop, connect WiFi to the "FUGU DIY MPPT" access point. There is no password needed. Once connected, you will be redirected to a configuration page to setup WiFi connection. Select your WiFi access point and input your WiFi password and connect. You will be disconnected automatically once it connects. Ther LCD should also prompt that WiFi is connected. In case you change the WiFi SSID or password of your router, perform a factory reset on the MPPT to reset the saved WiFi credentials. You will also be required to set everything back again. In the future, I will add a separate WiFi password reset on the settings menu to avoid losing the saved settings.
+5. Using a phone or Laptop, connect WiFi to the "FUGU DIY MPPT" access point. There is no password needed. Once connected, you will be redirected to a configuration page to setup WiFi connection. Select your WiFi access point and input your WiFi password and connect. You will be disconnected automatically once it connects. Ther LCD should also prompt that WiFi is connected. In case you change the WiFi SSID or password of your router, you can reset your credentials in the settings menu or perform a factory reset. You will be required to set everything back again if you chose to perform factory reset. 
 ## Changelog:
 
 Initial release Oct. 22, 2022
