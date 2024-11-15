@@ -90,6 +90,13 @@ void factoryResetMessageLCD(){
   lcd.setCursor(0,1);lcd.print("   SUCCESSFUL   ");
   delay(1000);
 }
+
+void WiFiResetMessageLCD(){
+  lcd.setCursor(0,0);lcd.print("   WIFI RESET   ");
+  lcd.setCursor(0,1);lcd.print("   SUCCESSFUL   ");
+  delay(1000);
+}
+
 void savedMessageLCD(){
 lcd.setCursor(0,0);lcd.print(" SETTINGS SAVED ");
 lcd.setCursor(0,1);lcd.print(" SUCCESSFULLY   ");
@@ -107,7 +114,7 @@ lcd.clear();
 void LCD_Menu(){
   int 
   menuPages          = 4,
-  subMenuPages       = 12,
+  subMenuPages       = 13,
   longPressTime      = 3000,
   longPressInterval  = 500,
   shortPressInterval = 100;
@@ -410,8 +417,21 @@ void LCD_Menu(){
       }       
     }
 
-    ///// SETTINGS MENU ITEM: AUTOLOAD /////
     else if(subMenuPage==9){
+      if(setMenuPage==0){
+        lcd.setCursor(0,0);lcd.print("RESET WIFI CRED-");
+        lcd.setCursor(0,1);lcd.print("> PRESS SELECT  ");  
+      }
+      else{
+        if(confirmationMenu==0){lcd.setCursor(0,0);lcd.print(" ARE YOU SURE?  ");lcd.setCursor(0,1);lcd.print("  >NO      YES  ");}  // Display ">No"
+        else{lcd.setCursor(0,0);lcd.print(" ARE YOU SURE?  ");lcd.setCursor(0,1);lcd.print("   NO     >YES  ");}                     // Display ">YES"
+        if(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){while(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){}if(confirmationMenu==0){confirmationMenu=1;}else{confirmationMenu=0;}}  //Cycle Yes NO
+        if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}cancelledMessageLCD();setMenuPage=0;confirmationMenu=0;} //Cancel
+        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}if(confirmationMenu==1){WifiReset();WiFiResetMessageLCD();}setMenuPage=0;confirmationMenu=0;subMenuPage=0;}
+      } 
+    } 
+    ///// SETTINGS MENU ITEM: AUTOLOAD /////
+    else if(subMenuPage==10){
       lcd.setCursor(0,0);lcd.print("AUTOLOAD FEATURE");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -430,7 +450,7 @@ void LCD_Menu(){
       }       
     }
     ///// SETTINGS MENU ITEM: BACKLIGHT SLEEP /////
-    else if(subMenuPage==10){
+    else if(subMenuPage==11){
       lcd.setCursor(0,0);lcd.print("BACKLIGHT SLEEP ");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -468,7 +488,7 @@ void LCD_Menu(){
       }         
     }
     ///// SETTINGS MENU ITEM: FACTORY RESET /////
-    else if(subMenuPage==11){
+    else if(subMenuPage==12){
       if(setMenuPage==0){
         lcd.setCursor(0,0);lcd.print("FACTORY RESET   ");
         lcd.setCursor(0,1);lcd.print("> PRESS SELECT  ");  
@@ -482,7 +502,7 @@ void LCD_Menu(){
       } 
     }  
     ///// SETTINGS MENU ITEM: FIRMWARE VERSION /////
-    else if(subMenuPage==12){
+    else if(subMenuPage==13){
       if(setMenuPage==0){
         lcd.setCursor(0,0);lcd.print("FIRMWARE VERSION");
         lcd.setCursor(0,1);lcd.print(firmwareInfo);    
