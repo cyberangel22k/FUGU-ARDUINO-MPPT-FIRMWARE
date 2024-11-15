@@ -66,3 +66,7 @@ Update Nov. 7, 2024
 * Adjust fan temp trigger to 45 degrees for better efficiency
 
 * set LCD sleep timer default setting to Daytime on
+
+  Update Nov. 15, 2024
+
+* Added an option to reset WiFi credentials in the settings menu
