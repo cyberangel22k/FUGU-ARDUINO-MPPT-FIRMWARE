@@ -28,6 +28,12 @@ void System_Processes(){
   else{}      
 }
 
+void WifiReset(){
+  WiFiManager wm;
+  wm.resetSettings();
+  loadSettings();
+}
+
 void factoryReset(){
   EEPROM.write(0,1);  //STORE: Charging Algorithm (1 = MPPT Mode)
   EEPROM.write(12,1); //STORE: Charger/PSU Mode Selection (1 = Charger Mode)
@@ -44,9 +50,7 @@ void factoryReset(){
   EEPROM.write(11,1); //STORE: Enable autoload (on by default)
   EEPROM.write(13,3); //STORE: LCD backlight sleep timer (default: 3 = Daytime On)
   EEPROM.commit();
-  WiFiManager wm;
-  wm.resetSettings();
-  loadSettings();
+  WifiReset();
 }
 
 void loadSettings(){ 
