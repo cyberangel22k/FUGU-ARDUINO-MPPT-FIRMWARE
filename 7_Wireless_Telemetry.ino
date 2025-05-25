@@ -36,8 +36,6 @@ BLYNK_CONNECTED() {
 
 void UpTime() {
   Blynk.virtualWrite(V19, millis() / 1000);  // Send UpTime seconds to App (you can create a new widget in blynk for uptime)
-  Serial.print("UpTime: ");
-  Serial.println(millis() / 1000);  // Send UpTime seconds to Serial
 }
 
 void Wireless_Telemetry(){
