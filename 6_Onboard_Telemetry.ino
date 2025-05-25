@@ -13,6 +13,7 @@ void Onboard_Telemetry(){
     if(serialTelemMode==0){}
 //  else if(chargingPause==1){Serial.println("CHARGING PAUSED");}   // Charging paused message
     else if(serialTelemMode==1){                                    // 1 - Display All                           
+      Serial.print("  UP:");   Serial.print(secondsElapsed);
       Serial.print(" ERR:");   Serial.print(ERR);
       Serial.print(" FLV:");   Serial.print(FLV);  
       Serial.print(" BNC:");   Serial.print(BNC);  
