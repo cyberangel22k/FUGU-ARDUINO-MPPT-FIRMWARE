@@ -31,6 +31,7 @@ void Charging_Algorithm(){
     if(REC==1){                                                                      //IUV RECOVERY - (Only active for charging mode)
       REC=0;                                                                         //Reset IUV recovery boolean identifier 
       buck_Disable();                                                                //Disable buck before PPWM initialization
+      lcd.setBacklight(HIGH);
       lcd.setCursor(0,0);lcd.print("POWER SOURCE    ");                              //Display LCD message
       lcd.setCursor(0,1);lcd.print("DETECTED        ");                              //Display LCD message 
       Serial.println("> Solar Panel Detected");                                      //Display serial message
