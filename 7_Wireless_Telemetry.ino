@@ -22,7 +22,7 @@ void setupWiFi(){
         delay(1500);                                                                   //For loop "loading... effect
         lcd.clear();
     }
-    Blynk.config(auth, "blynk.cloud", 80);
+    Blynk.config(BLYNK_AUTH_TOKEN, "blynk.cloud", 80);
     Blynk.connect();
     timer.setInterval(1000L, UpTime);
     }
