@@ -108,8 +108,6 @@ Adafruit_ADS1115 ads;             //SYSTEM PARAMETER  - ADS1115 ADC Library (By:
 #define buttonSelect    23          //SYSTEM PARAMETER -
 #define BLYNK_PRINT Serial
 
-char 
-auth[] = "Input Blynk Authentication Token";   //   USER PARAMETER - Input Blynk Authentication Token (From Blynk console)
 
 //====================================== USER PARAMETERS ==========================================//
 // The parameters below are the default parameters used when the MPPT charger settings have not    //
