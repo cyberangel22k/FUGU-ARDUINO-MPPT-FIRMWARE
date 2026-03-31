@@ -3,12 +3,19 @@ void lcdBacklight_Wake(){
     prevLCDBackLMillis = millis();
 }
 void lcdBacklight(){
-  unsigned long backLightInterval;
+ unsigned long backLightInterval = 10000;
+  
   if(backlightSleepMode==0){prevLCDBackLMillis = millis();}                 //Set backlight var to sleep never
   else if(backlightSleepMode==1){backLightInterval=10000;}                  //Set backlight var to sleep after 10 seconds without keypress 
   else if(backlightSleepMode==2){backLightInterval=300000;}                 //Set backlight var to sleep after 5 minutes without keypress 
-  else if(backlightSleepMode==3 && buckEnable==1){prevLCDBackLMillis = millis();}     //Set backlight to on during daytime
-  else if(backlightSleepMode==3 && buckEnable==0){backLightInterval=10000;}
+  else if(backlightSleepMode==3){
+    if(buckEnable==1){
+      lcdBacklight_Wake();                                                  //Set backlight to on during daytime
+      return;
+    } else {
+      backLightInterval = 10000;                                            // 10s sleep if the sun goes down                                      
+    }
+  }
 
 
   if(backlightSleepMode>0 && settingMode==0){
