@@ -49,6 +49,7 @@ void factoryReset(){
   EEPROM.write(10,1); //STORE: Enable WiFi (Boolean)
   EEPROM.write(11,1); //STORE: Enable autoload (on by default)
   EEPROM.write(13,3); //STORE: LCD backlight sleep timer (default: 3 = Daytime On)
+  EEPROM.write(14,1); //STORE: Onboard Telemetry
   EEPROM.commit();
   WifiReset();
 }
@@ -65,6 +66,7 @@ void loadSettings(){
   enableWiFi         = EEPROM.read(10);                      // Load saved WiFi enable settings  
   flashMemLoad       = EEPROM.read(11);                      // Load saved flash memory autoload feature
   backlightSleepMode = EEPROM.read(13);                      // Load saved lcd backlight sleep timer
+  serialTelemMode    = EEPROM.read(14);                      // Load saved Onboard telemetry settings
 }
 
 void saveSettings(){
@@ -88,6 +90,7 @@ void saveSettings(){
   EEPROM.write(10,enableWiFi);         //STORE: Enable WiFi
 //EEPROM.write(11,flashMemLoad);       //STORE: Enable autoload (must be excluded from bulk save, uncomment under discretion)
   EEPROM.write(13,backlightSleepMode); //STORE: LCD backlight sleep timer 
+  EEPROM.write(14,serialTelemMode);    //STORE: Onboard Telemetry setting 
   EEPROM.commit();                     //Saves setting changes to flash memory
 }
 void saveAutoloadSettings(){
