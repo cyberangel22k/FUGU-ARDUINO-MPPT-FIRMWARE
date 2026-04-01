@@ -91,19 +91,23 @@ void displayConfig5(){
   lcd.setCursor(0,0);lcd.print(" SETTINGS MENU  ");
   lcd.setCursor(0,1);lcd.print("--PRESS SELECT--");
 }
-
+void displayConfig6(){
+  lcd.setCursor(0,0);lcd.print("Harvest: ");
+  lcd.print(lifetimeKwh, 1);
+  lcd.print(" kWh   ");
+  lcd.setCursor(0,1);lcd.print("Since: ");
+  lcd.print(startDate);
+}
 void factoryResetMessageLCD(){
   lcd.setCursor(0,0);lcd.print("  FACTORY RESET ");
   lcd.setCursor(0,1);lcd.print("   SUCCESSFUL   ");
   delay(1000);
 }
-
 void WiFiResetMessageLCD(){
   lcd.setCursor(0,0);lcd.print("   WIFI RESET   ");
   lcd.setCursor(0,1);lcd.print("   SUCCESSFUL   ");
   delay(1000);
 }
-
 void savedMessageLCD(){
 lcd.setCursor(0,0);lcd.print(" SETTINGS SAVED ");
 lcd.setCursor(0,1);lcd.print(" SUCCESSFULLY   ");
@@ -120,7 +124,7 @@ lcd.clear();
 ////////////////////////////////////////////  MAIN LCD MENU CODE /////////////////////////////////////////////
 void LCD_Menu(){
   int 
-  menuPages          = 4,
+  menuPages          = 5,
   subMenuPages       = 13,
   longPressTime      = 3000,
   longPressInterval  = 500,
@@ -494,8 +498,47 @@ void LCD_Menu(){
         }
       }         
     }
-    ///// SETTINGS MENU ITEM: FACTORY RESET /////
+    ///// SETTINGS MENU ITEM: ONBOARD TELEMETRY /////
     else if(subMenuPage==12){
+      lcd.setCursor(0,0);lcd.print("USB TELEMETRY:  ");
+      if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
+      else{lcd.setCursor(0,1);lcd.print("= ");}
+      lcd.setCursor(2,1);
+      if(serialTelemMode == 1)      {lcd.print("DISPLAY ALL   ");}
+      else if(serialTelemMode == 2) {lcd.print("ESSENTIAL     ");}
+      else if(serialTelemMode == 3) {lcd.print("NUMBERS ONLY  ");}
+      else{lcd.print("DISABLED      ");}
+      
+      //SET MENU - INTMODETYPE
+      if(setMenuPage==0){intTemp = serialTelemMode;}
+      else{
+        if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}serialTelemMode = intTemp;cancelledMessageLCD();setMenuPage=0;} 
+        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
+        if(digitalRead(buttonRight)==1){                                                    //Right button press (increments setting values)
+          serialTelemMode++;                                                           //Increment by 1
+          serialTelemMode = constrain(serialTelemMode,0,3);                         //Limit settings values to a range
+          lcd.setCursor(2,1);
+        if(serialTelemMode == 1)      {lcd.print("DISPLAY ALL   ");}
+        else if(serialTelemMode == 2) {lcd.print("ESSENTIAL     ");}
+        else if(serialTelemMode == 3) {lcd.print("NUMBERS ONLY  ");}
+        else{lcd.print("DISABLED      ");}
+          while(digitalRead(buttonRight)==1){} 
+        }
+        else if(digitalRead(buttonLeft)==1){                                              //Left button press (decrements setting values)
+          serialTelemMode--;                                                           //Increment by 1
+          serialTelemMode = constrain(serialTelemMode,0,3);                         //Limit settings values to a range
+          lcd.setCursor(2,1);
+        if(serialTelemMode == 1)      {lcd.print("DISPLAY ALL   ");}
+        else if(serialTelemMode == 2) {lcd.print("ESSENTIAL     ");}
+        else if(serialTelemMode == 3) {lcd.print("NUMBERS ONLY  ");}
+        else{lcd.print("DISABLED      ");}
+          while(digitalRead(buttonLeft)==1){} 
+        }
+      }         
+    }        
+        
+    ///// SETTINGS MENU ITEM: FACTORY RESET /////
+    else if(subMenuPage==13){
       if(setMenuPage==0){
         lcd.setCursor(0,0);lcd.print("FACTORY RESET   ");
         lcd.setCursor(0,1);lcd.print("> PRESS SELECT  ");  
@@ -509,13 +552,11 @@ void LCD_Menu(){
       } 
     }  
     ///// SETTINGS MENU ITEM: FIRMWARE VERSION /////
-    else if(subMenuPage==13){
+    else if(subMenuPage==14){
       if(setMenuPage==0){
         lcd.setCursor(0,0);lcd.print("FIRMWARE VERSION");
         lcd.setCursor(0,1);lcd.print(firmwareInfo);    
         lcd.setCursor(8,1);lcd.print(firmwareDate); 
-
-        
       }
       else{
         lcd.setCursor(0,0);lcd.print(firmwareContactR1);
@@ -554,6 +595,7 @@ void LCD_Menu(){
       else if(menuPage==2){displayConfig3();}
       else if(menuPage==3){displayConfig4();}
       else if(menuPage==4){displayConfig5();}
+      else if(menuPage==5){displayConfig6();}        
     }    
   }
 }
