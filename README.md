@@ -66,3 +66,14 @@ Update Nov. 7, 2024
 Update Nov. 15, 2024
 
 * Added an option to reset WiFi credentials in the settings menu
+
+Update April 1, 2026
+
+* Fixed the sleeptimer bug that kills the backlight during active charging when set to Daytime ON (LCD backlight timeout)
+
+* Added a setting menu item to set USB serial monitoring mode.
+
+* Optimized WiFi connection and reconnection function. Removed unnecessary code.
+
+* Added lifetime harvest monitoring that saves the kWh data to the ESP32's flash memory so it survives reboots. Added a displayConfig page for lifetime harvest.
+ 
