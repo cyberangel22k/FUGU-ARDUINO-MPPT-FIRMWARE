@@ -9,13 +9,16 @@ void setupWiFi(){
     Serial.begin(baudRate);
     Serial.println("Setting up WiFi access point...");
     WiFiManager wm;
+    wm.setConfigPortalTimeout(30);         // If no WiFi after 30s, give up and start charging
     bool res;
     res = wm.autoConnect("FUGU DIY MPPT"); // FUGU DIY MPPT Access point name
     if(!res) {
-        Serial.println("Failed to connect");
-    } 
+      Serial.println("WiFi Failed - Running in Offline Mode");
+      WIFI = 0;
+    }
     else {
         Serial.println("Connected to WiFi");
+        WIFI = 1;
         lcd.setBacklight(HIGH);
         lcd.setCursor(0,0);lcd.print("Connected to    ");                              //Display LCD message
         lcd.setCursor(0,1);lcd.print("WiFi Network    ");                              //Display LCD message   
@@ -24,46 +27,25 @@ void setupWiFi(){
     }
     Blynk.config(BLYNK_AUTH_TOKEN, "blynk.cloud", 80);
     Blynk.connect();
-    timer.setInterval(1000L, UpTime);
     }
 }
 
-BLYNK_CONNECTED() {
-  Serial.println("Connected");
-  ReCnctCount = 0;
-  WIFI = 1;
-}
-
-void UpTime() {
-  Blynk.virtualWrite(V19, millis() / 1000);  // Send UpTime seconds to App (you can create a new widget in blynk for uptime)
-}
-
 void Wireless_Telemetry(){
-  timer.run();
-  if (Blynk.connected()) {  // If connected run as normal
-    Blynk.run();
-  } else if (ReCnctFlag == 0) {  // If NOT connected and not already trying to reconnect, set timer to try to reconnect in 30 seconds
-    WIFI = 0;
-    ReCnctFlag = 1;  // Set reconnection Flag
-    Serial.println("Starting reconnection timer in 30 seconds...");
-    timer.setTimeout(30000L, []() {  // Lambda Reconnection Timer Function
-      ReCnctFlag = 0;  // Reset reconnection Flag
-      ReCnctCount++;  // Increment reconnection Counter
-      Serial.print("Attempting reconnection #");
-      Serial.println(ReCnctCount);
-      WiFi.reconnect();
-      Blynk.connect();  // Try to reconnect to the server
-    });  // END Timer Function
-  }
+    if(enableWiFi==1){
+      if(Blynk.connected()){
+        Blynk.run();
+      }
+    static unsigned long lastBlynkUpdate = 0;
+    if(millis() - lastBlynkUpdate > 1000){ // Only send data once per second
+      lastBlynkUpdate = millis();
+    if(!Blynk.connected()){ Blynk.connect(); }
 
-  if(WIFI==1){
     int LED1, LED2, LED3, LED4;                      //Declare LED brightness variable 
     if(buckEnable==1)      {LED1=200;}else{LED1=0;}  //BATTERY CHARGING STATUS
     if(batteryPercent>=99 ){LED2=200;}else{LED2=0;}  //FULL CHARGE STATUS
     if(batteryPercent<=10) {LED3=200;}else{LED3=0;}  //LOW BATTERY STATUS
     if(IUV==0)             {LED4=200;}else{LED4=0;}  //PV INPUT PRESENCE STATUS
 
-    Blynk.run();  
     Blynk.virtualWrite(V1, powerInput); 
     Blynk.virtualWrite(V2, batteryPercent);
     Blynk.virtualWrite(V3, voltageInput);    
@@ -87,5 +69,5 @@ void Wireless_Telemetry(){
   if(enableBluetooth==1){
     //ADD BLUETOOTH CODE
   }
-  
+ }
 }
