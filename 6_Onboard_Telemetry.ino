@@ -81,6 +81,12 @@ void Onboard_Telemetry(){
       Serial.print(" ");       Serial.print(loopTime,3);
       Serial.print(" ");       Serial.println("");    
     }  
-
   } 
+  // AUTOMATIC HOURLY SAVE TO NVS (Saves the "Odometer")
+  static unsigned long lastSaveMillis = 0;
+   if(millis() - lastSaveMillis > 3600000){ // 3,600,000ms = 1 Hour
+    lastSaveMillis = millis();
+    stats.putFloat("lifetime", lifetimeKwh);
+    Serial.println("> SYSTEM: LIFETIME DATA BACKED UP TO FLASH");
+ }  
 }
