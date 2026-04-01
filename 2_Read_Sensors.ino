@@ -78,6 +78,7 @@ void Read_Sensors(){
   if(currentRoutineMillis-prevRoutineMillis>=millisRoutineInterval){   //Run routine every millisRoutineInterval (ms)
     prevRoutineMillis = currentRoutineMillis;                          //Store previous time
     Wh = Wh+(powerInput/(3600.000*(1000.000/millisRoutineInterval)));  //Accumulate and compute energy harvested (3600s*(1000/interval))
+    lifetimeKwh = lifetimeKwh+((powerInput/(3600.000*(1000.000/millisRoutineInterval))) / 1000.000);
     kWh = Wh/1000.000;
     MWh = Wh/1000000.000;
     daysRunning = timeOn/(86400.000*(1000.000/millisRoutineInterval)); //Compute for days running (86400s*(1000/interval))
