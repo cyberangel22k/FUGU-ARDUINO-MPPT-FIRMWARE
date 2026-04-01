@@ -70,7 +70,8 @@ String
 firmwareInfo      = "V1.101  ",
 firmwareDate      = "17/10/24",
 firmwareContactR1 = "www.youtube.com/",  
-firmwareContactR2 = "TechBuilder     ";        
+firmwareContactR2 = "TechBuilder     ",
+startDate         = "01/04/2023";
 
 //====================== ARDUINO LIBRARIES (ESP32 Compatible Libraries) ============================//
 // You will have to download and install the following libraries below in order to program the MPPT //
@@ -85,6 +86,8 @@ firmwareContactR2 = "TechBuilder     ";
 #include <LiquidCrystal_I2C.h>      //SYSTEM PARAMETER  - ESP32 LCD Compatible Library (By: Robojax)
 #include <Adafruit_ADS1X15.h>       //SYSTEM PARAMETER  - ADS1115/ADS1015 ADC Library (By: Adafruit)
 #include <WiFiManager.h>            //SYSTEM PARAMETER  - Wifi Manager for configuring wifi credentials on initial startup or after a factory reset
+#include <Preferences.h>
+Preferences stats;
 LiquidCrystal_I2C lcd(0x27,16,2);   //SYSTEM PARAMETER  - Configure LCD RowCol Size and I2C Address
 TaskHandle_t Core2;                 //SYSTEM PARAMETER  - Used for the ESP32 dual core operation
 //Adafruit_ADS1015 ads;               //SYSTEM PARAMETER  - ADS1015 ADC Library (By: Adafruit) Kindly delete this line if you are using ADS1115
@@ -147,7 +150,8 @@ float
 voltageBatteryMax       = 27.3000,     //   USER PARAMETER - Maximum Battery Charging Voltage (Output V)
 voltageBatteryMin       = 22.4000,     //   USER PARAMETER - Minimum Battery Charging Voltage (Output V)
 currentCharging         = 30.0000,     //   USER PARAMETER - Maximum Charging Current (A - Output)
-electricalPrice         = 9.5000;      //   USER PARAMETER - Input electrical price per kWh (Dollar/kWh,Euro/kWh,Peso/kWh)
+electricalPrice         = 9.5000,      //   USER PARAMETER - Input electrical price per kWh (Dollar/kWh,Euro/kWh,Peso/kWh)
+lifetimeKwh             = 0.0;         //   USER PARAMETER - Lifetime harvested KW
 
 
 //================================== CALIBRATION PARAMETERS =======================================//
@@ -278,7 +282,8 @@ prevLCDBackLMillis    = 0,           //SYSTEM PARAMETER -
 timeOn                = 0,           //SYSTEM PARAMETER -
 loopTimeStart         = 0,           //SYSTEM PARAMETER - Used for the loop cycle stop watch, records the loop start time
 loopTimeEnd           = 0,           //SYSTEM PARAMETER - Used for the loop cycle stop watch, records the loop end time
-secondsElapsed        = 0;           //SYSTEM PARAMETER - 
+secondsElapsed        = 0,           //SYSTEM PARAMETER - 
+lastSaveMillis        = 0;
 
 //====================================== MAIN PROGRAM =============================================//
 // The codes below contain all the system processes for the MPPT firmware. Most of them are called //
@@ -335,6 +340,8 @@ void setup() {
   //INITIALIZE AND LIOAD FLASH MEMORY DATA
   EEPROM.begin(512);
   Serial.println("> FLASH MEMORY: STORAGE INITIALIZED");  //Startup message 
+  stats.begin("fugu-stats", false); 
+  lifetimeKwh = stats.getFloat("lifetime", 0.0);          // Pulls saved value from flash
   initializeFlashAutoload();                              //Load stored settings from flash memory       
   Serial.println("> FLASH MEMORY: SAVED DATA LOADED");    //Startup message 
 
