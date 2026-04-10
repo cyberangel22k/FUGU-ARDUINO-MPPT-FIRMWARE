@@ -71,7 +71,7 @@ firmwareInfo      = "V1.101  ",
 firmwareDate      = "17/10/24",
 firmwareContactR1 = "www.youtube.com/",  
 firmwareContactR2 = "TechBuilder     ",
-startDate         = "01/04/2023";
+startDate         = "01/04/26";
 
 //====================== ARDUINO LIBRARIES (ESP32 Compatible Libraries) ============================//
 // You will have to download and install the following libraries below in order to program the MPPT //
