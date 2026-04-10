@@ -27,7 +27,9 @@ Assuming you have already built the FUGU MPPT Solar Charge Controller using Ange
 
 Initial release Oct. 22, 2022
 
-* set ADS1115 as default parameter (ADS1115 is actually cheaper now and easier to buy than ADS1015) NOTE: Change the values if you are using ADS1015
+* set ADS1115 as default parameter (ADS1115 is actually cheaper now and easier to buy than ADS1015)
+  NOTE: Change the values if you are using ADS1015
+  Additional Note: During the testing of this project for years, I observed that using ADS1015 is more efficient as the temps are much cooler compared when using ADS1115. You may test this too to confirm my observations.
 
 * can still work with the latest Blynk. Blynk Legacy is dead. (you need to create your own widgets in blynk console)
 
