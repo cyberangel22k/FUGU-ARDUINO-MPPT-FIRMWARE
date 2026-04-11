@@ -1,14 +1,13 @@
 void ADC_SetGain(){
-  if(ADS1015_Mode==true){                                                    //FOR ADS1015 12-BIT ADC MODEL
-    if(ADC_GainSelect==0){ads.setGain(GAIN_TWOTHIRDS);ADC_BitReso=3.0000;}   // Gain: 2/3x  Range: +/- 6.144V  
-    else if(ADC_GainSelect==1){ads.setGain(GAIN_ONE);ADC_BitReso=2.0000;}    // Gain: 1x    Range: +/- 4.096V    
-    else if(ADC_GainSelect==2){ads.setGain(GAIN_TWO);ADC_BitReso=1.0000;}    // Gain: 2x    Range: +/- 2.048V       
+  if      (ADC_GainSelect == 0) { ads.setGain(GAIN_TWOTHIRDS); ADC_BitReso = 0.1875; } 
+  else if (ADC_GainSelect == 1) { ads.setGain(GAIN_ONE);      ADC_BitReso = 0.125;  } 
+  else if (ADC_GainSelect == 2) { ads.setGain(GAIN_TWO);      ADC_BitReso = 0.0625; }
+
+  if (ADS1015_Mode == true) {
+    ADC_BitReso = ADC_BitReso * 16.0;
   }
-  else{                                                                      //FOR ADS1115 16-BIT ADC MODEL
-    if(ADC_GainSelect==0){ads.setGain(GAIN_TWOTHIRDS);ADC_BitReso= 0.1875;}  // Gain: 2/3x  Range: +/- 6.144V
-    else if(ADC_GainSelect==1){ads.setGain(GAIN_ONE);ADC_BitReso= 0.125;}    // Gain: 1x    Range: +/- 4.096V  
-    else if(ADC_GainSelect==2){ads.setGain(GAIN_TWO);ADC_BitReso= 0.0625;}   // Gain: 2x    Range: +/- 2.048V    
-  }
+  Serial.print("> ADC: Resolution set to ");
+  Serial.println(ADC_BitReso, 4);
 }
 void resetVariables(){
   secondsElapsed = 0;
