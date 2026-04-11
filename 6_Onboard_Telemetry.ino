@@ -86,7 +86,9 @@ void Onboard_Telemetry(){
   static unsigned long lastSaveMillis = 0;
    if(millis() - lastSaveMillis > 3600000){ // 3,600,000ms = 1 Hour
     lastSaveMillis = millis();
+    stats.begin("fugu-stats", false);
     stats.putFloat("lifetime", lifetimeKwh);
+    stats.end();
     Serial.println("> SYSTEM: LIFETIME DATA BACKED UP TO FLASH");
  }  
 }
