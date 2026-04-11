@@ -342,6 +342,7 @@ void setup() {
   Serial.println("> FLASH MEMORY: STORAGE INITIALIZED");  //Startup message 
   stats.begin("fugu-stats", false); 
   lifetimeKwh = stats.getFloat("lifetime", 0.0);          // Pulls saved value from flash
+  stats.end();
   initializeFlashAutoload();                              //Load stored settings from flash memory       
   Serial.println("> FLASH MEMORY: SAVED DATA LOADED");    //Startup message 
 
