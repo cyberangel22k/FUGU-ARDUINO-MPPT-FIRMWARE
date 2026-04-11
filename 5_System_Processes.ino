@@ -28,6 +28,38 @@ void System_Processes(){
   else{}      
 }
 
+void runSetupWizard() {
+  bool selectionMade = false;
+  setMenuPage = 1;
+  while (!selectionMade) {
+    lcd.setCursor(0, 0);
+    lcd.print("SELECT ADC TYPE ");
+    if(setMenuPage == 1) { lcd.setCursor(0, 1); lcd.print(" >"); }
+    else                 { lcd.setCursor(0, 1); lcd.print("= "); }
+    if(ADS1015_Mode == 0) { lcd.print("ADS1115 (16bit)"); }
+    else                  { lcd.print("ADS1015 (12bit)"); }
+
+    if(digitalRead(buttonRight) == 1 || digitalRead(buttonLeft) == 1) {
+      while(digitalRead(buttonRight) == 1 || digitalRead(buttonLeft) == 1) {}
+      if(ADS1015_Mode == 1) { ADS1015_Mode = 0; } else { ADS1015_Mode = 1; }
+    }
+    if(digitalRead(buttonBack) == 1) {
+      while(digitalRead(buttonBack) == 1) {}
+      lcd.clear(); lcd.print("REQUIRED SETTING"); delay(1000); lcd.clear();
+    }
+    if(digitalRead(buttonSelect) == 1) {
+      while(digitalRead(buttonSelect) == 1) {}
+      stats.begin("fugu-stats", false);
+      stats.putBool("is1015", ADS1015_Mode);
+      stats.putBool("isFirstBoot", false);
+      stats.end();
+      savedMessageLCD();
+      selectionMade = true;
+    }
+  }
+  ESP.restart();
+}
+
 void WifiReset(){
   WiFiManager wm;
   wm.resetSettings();
