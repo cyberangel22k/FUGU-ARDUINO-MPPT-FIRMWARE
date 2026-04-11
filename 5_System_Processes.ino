@@ -28,6 +28,11 @@ void System_Processes(){
   else{}      
 }
 
+void WifiReset(){
+  WiFiManager wm;
+  wm.resetSettings();
+}
+
 void factoryReset(){
   EEPROM.write(0,1);  //STORE: Charging Algorithm (1 = MPPT Mode)
   EEPROM.write(1,12); //STORE: Max Battery Voltage (whole)
@@ -47,8 +52,7 @@ void factoryReset(){
   EEPROM.commit();
   stats.begin("fugu-stats", false);
   stats.clear(); 
-  stats.end();
-  WiFiManager wm;
+  WifiReset();
   wm.resetSettings();
   lcd.clear();
   lcd.setCursor(0,0);
