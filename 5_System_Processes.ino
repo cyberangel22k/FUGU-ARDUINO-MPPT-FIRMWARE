@@ -51,6 +51,9 @@ void factoryReset(){
   EEPROM.write(13,3); //STORE: LCD backlight sleep timer (default: 3 = Daytime On)
   EEPROM.write(14,1); //STORE: Onboard Telemetry
   EEPROM.commit();
+  stats.begin("fugu-stats", false);
+  stats.clear(); 
+  stats.end();
   WifiReset();
 }
 
