@@ -28,12 +28,6 @@ void System_Processes(){
   else{}      
 }
 
-void WifiReset(){
-  WiFiManager wm;
-  wm.resetSettings();
-  loadSettings();
-}
-
 void factoryReset(){
   EEPROM.write(0,1);  //STORE: Charging Algorithm (1 = MPPT Mode)
   EEPROM.write(12,1); //STORE: Charger/PSU Mode Selection (1 = Charger Mode)
@@ -54,7 +48,16 @@ void factoryReset(){
   stats.begin("fugu-stats", false);
   stats.clear(); 
   stats.end();
-  WifiReset();
+  WiFiManager wm;
+  wm.resetSettings();
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(" FACTORY RESET  ");
+  lcd.setCursor(0,1);
+  lcd.print(" REBOOTING...   ");
+  Serial.println("> SYSTEM: FACTORY RESET COMPLETE. REBOOTING...");
+  delay(3000);
+  ESP.restart();
 }
 
 void loadSettings(){ 
