@@ -30,7 +30,6 @@ void System_Processes(){
 
 void factoryReset(){
   EEPROM.write(0,1);  //STORE: Charging Algorithm (1 = MPPT Mode)
-  EEPROM.write(12,1); //STORE: Charger/PSU Mode Selection (1 = Charger Mode)
   EEPROM.write(1,12); //STORE: Max Battery Voltage (whole)
   EEPROM.write(2,0);  //STORE: Max Battery Voltage (decimal)
   EEPROM.write(3,9);  //STORE: Min Battery Voltage (whole)
@@ -42,6 +41,7 @@ void factoryReset(){
   EEPROM.write(9,90); //STORE: Shutdown Temp (Integer)
   EEPROM.write(10,1); //STORE: Enable WiFi (Boolean)
   EEPROM.write(11,1); //STORE: Enable autoload (on by default)
+  EEPROM.write(12,1); //STORE: Charger/PSU Mode Selection (1 = Charger Mode)
   EEPROM.write(13,3); //STORE: LCD backlight sleep timer (default: 3 = Daytime On)
   EEPROM.write(14,1); //STORE: Onboard Telemetry
   EEPROM.commit();
