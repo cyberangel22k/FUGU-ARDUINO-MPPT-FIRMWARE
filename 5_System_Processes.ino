@@ -85,7 +85,6 @@ void factoryReset(){
   stats.begin("fugu-stats", false);
   stats.clear(); 
   WifiReset();
-  wm.resetSettings();
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print(" FACTORY RESET  ");
