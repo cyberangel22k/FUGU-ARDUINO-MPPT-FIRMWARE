@@ -9,7 +9,7 @@ void setupWiFi(){
     Serial.begin(baudRate);
     Serial.println("Setting up WiFi access point...");
     WiFiManager wm;
-    wm.setConfigPortalTimeout(30);         // If no WiFi after 30s, give up and start charging
+    wm.setConfigPortalTimeout(120);         // If no WiFi after 120s, give up and start charging
     bool res;
     res = wm.autoConnect("FUGU DIY MPPT"); // FUGU DIY MPPT Access point name
     if(!res) {
