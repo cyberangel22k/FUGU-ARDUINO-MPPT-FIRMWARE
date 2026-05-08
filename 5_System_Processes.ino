@@ -63,6 +63,7 @@ void runSetupWizard() {
 void WifiReset(){
   WiFiManager wm;
   wm.resetSettings();
+  setupWiFi();
 }
 
 void factoryReset(){
