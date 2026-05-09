@@ -61,9 +61,16 @@ void runSetupWizard() {
 }
 
 void WifiReset(){
+  lcd.clear();
+  lcd.setCursor(0,0); lcd.print("Resetting WiFi...");
+  lcd.setCursor(0,1); lcd.print("Please wait...");
+  delay(1000);
   WiFiManager wm;
   wm.resetSettings();
-  setupWiFi();
+  lcd.clear();
+  lcd.setCursor(0,0); lcd.print("Rebooting...");
+  delay(1000);
+  ESP.restart();
 }
 
 void factoryReset(){
