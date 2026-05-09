@@ -103,11 +103,6 @@ void factoryResetMessageLCD(){
   lcd.setCursor(0,1);lcd.print("   SUCCESSFUL   ");
   delay(1000);
 }
-void WiFiResetMessageLCD(){
-  lcd.setCursor(0,0);lcd.print("   WIFI RESET   ");
-  lcd.setCursor(0,1);lcd.print("   SUCCESSFUL   ");
-  delay(1000);
-}
 void savedMessageLCD(){
 lcd.setCursor(0,0);lcd.print(" SETTINGS SAVED ");
 lcd.setCursor(0,1);lcd.print(" SUCCESSFULLY   ");
