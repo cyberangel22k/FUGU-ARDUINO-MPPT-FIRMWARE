@@ -81,3 +81,8 @@ Update April 1, 2026
 
 * Added lifetime harvest monitoring that saves the kWh data to the ESP32's flash memory so it survives reboots. Added a displayConfig page for lifetime harvest.
  
+Update May 9, 2026
+
+* Added an option to select the correct ADS module at first boot. (This means this firmware will not work anymore for devices without buttons and LCD).
+
+* Potentially fixed LCD bugs when reseting Wi-Fi Credentials and when device is connected a network. 
