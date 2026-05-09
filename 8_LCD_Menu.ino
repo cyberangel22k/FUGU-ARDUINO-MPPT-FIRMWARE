@@ -427,7 +427,7 @@ void LCD_Menu(){
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}
       }       
     }
-
+    ///// SETTINGS MENU ITEM: RESET WIFI CREDENTIALS /////
     else if(subMenuPage==9){
       if(setMenuPage==0){
         lcd.setCursor(0,0);lcd.print("RESET WIFI CRED-");
@@ -438,7 +438,7 @@ void LCD_Menu(){
         else{lcd.setCursor(0,0);lcd.print(" ARE YOU SURE?  ");lcd.setCursor(0,1);lcd.print("   NO     >YES  ");}                     // Display ">YES"
         if(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){while(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){}if(confirmationMenu==0){confirmationMenu=1;}else{confirmationMenu=0;}}  //Cycle Yes NO
         if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}cancelledMessageLCD();setMenuPage=0;confirmationMenu=0;} //Cancel
-        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}if(confirmationMenu==1){WifiReset();WiFiResetMessageLCD();}setMenuPage=0;confirmationMenu=0;subMenuPage=0;}
+        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}if(confirmationMenu==1){WifiReset();}setMenuPage=0;confirmationMenu=0;subMenuPage=0;}
       } 
     } 
     ///// SETTINGS MENU ITEM: AUTOLOAD /////
