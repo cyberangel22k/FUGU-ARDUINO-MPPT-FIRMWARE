@@ -92,6 +92,6 @@ Update May, 21, 2026
 
 * Updated setup wizard. Added an option to set date as reference for the lifetime harvest. This is automatically set if connected to Wi-Fi but you need to manually input the date in offline mode.
 
-* Rearranged boot sequence to avoid calling setupWiFI() at the same time on first boot.
+* Rearranged boot sequence to avoid calling setupWiFI() at the twice on first boot.
 
 * added a vTaskDelay in coreTwo  to prevent watchdog from getting triggered.
