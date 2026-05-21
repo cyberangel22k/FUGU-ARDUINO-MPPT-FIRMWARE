@@ -15,6 +15,7 @@ I have modified the firmware and published here for anyone to use.
 
 ## Additional requirement:
 This sketch currently work on ESP32 library by Espressif Systems version 2.0.17 and below only. If you use updated board library, you will get errors.
+Starting May 9, 2026 update, this firmware now requires LCD and buttons to setup the device for the first time. I may revise this soon and have an option to set everything in the captive portal so it can work again without LCD and buttons.
 
 ## Usage
 Assuming you have already built the FUGU MPPT Solar Charge Controller using AngeloCasi's guide, here are the steps flashing this firmware version:
