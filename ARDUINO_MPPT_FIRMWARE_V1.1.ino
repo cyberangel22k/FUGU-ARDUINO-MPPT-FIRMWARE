@@ -71,7 +71,13 @@ firmwareInfo      = "V1.101  ",
 firmwareDate      = "17/10/24",
 firmwareContactR1 = "www.youtube.com/",  
 firmwareContactR2 = "TechBuilder     ",
-startDate         = "01/04/26";
+startDate         = "2025-01-01";
+
+// Global parameters for the interactive Date Picker Wizard
+int
+wizardYear = 2025,  // Base starting point
+wizardMonth = 1,
+wizardDay = 1;
 
 //====================== ARDUINO LIBRARIES (ESP32 Compatible Libraries) ============================//
 // You will have to download and install the following libraries below in order to program the MPPT //
@@ -86,7 +92,8 @@ startDate         = "01/04/26";
 #include <LiquidCrystal_I2C.h>      //SYSTEM PARAMETER  - ESP32 LCD Compatible Library (By: Robojax)
 #include <Adafruit_ADS1X15.h>       //SYSTEM PARAMETER  - ADS1115/ADS1015 ADC Library (By: Adafruit)
 #include <WiFiManager.h>            //SYSTEM PARAMETER  - Wifi Manager for configuring wifi credentials on initial startup or after a factory reset
-#include <Preferences.h>
+#include <Preferences.h>            //SYSTEM PARAMETER  - 
+#include <time.h>                   //SYSTEM PARAMETER  - 
 Preferences stats;
 LiquidCrystal_I2C lcd(0x27,16,2);   //SYSTEM PARAMETER  - Configure LCD RowCol Size and I2C Address
 TaskHandle_t Core2;                 //SYSTEM PARAMETER  - Used for the ESP32 dual core operation
@@ -299,8 +306,9 @@ void coreTwo(void * pvParameters){
 //================= CORE0: LOOP (DUAL CORE MODE) ======================//
   while(1){
     Wireless_Telemetry();                                   //TAB#7 - Wireless telemetry (WiFi & Bluetooth)
-    
-}}
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+  }
+}
 //================== CORE1: SETUP (DUAL CORE MODE) ====================//
 void setup() { 
   
@@ -320,6 +328,41 @@ void setup() {
   pinMode(buttonBack,INPUT); 
   pinMode(buttonSelect,INPUT); 
   
+  //LCD INITIALIZATION
+  if(enableLCD==1){
+    lcd.begin();
+    lcd.setBacklight(HIGH);
+    lcd.setCursor(0,0);
+    lcd.print("START: FUGU MPPT");
+    lcd.setCursor(0,1);
+    lcd.print("FIRMWARE ");
+    lcd.print(firmwareInfo);    
+    delay(1500);
+    lcd.clear();
+  }
+
+  //CHECK MEMORY FOR FIRST BOOT STATUS
+  stats.begin("fugu-stats", true);                           // Open in read-only mode
+  bool isFirstBoot = stats.getBool("isFirstBoot", true);     // Defaults to true if empty
+  startDate = stats.getString("startDate", "2025-01-01");    // Load your saved date
+  ADS1015_Mode = stats.getBool("is1015", 0);                 // Load existing if not first boot
+  stats.end();
+
+  //RUN SETUP WIZARD ON FIRST BOOT
+  if(isFirstBoot) {
+    runSetupWizard();
+  }
+
+  //INITIALIZE AND LIOAD FLASH MEMORY DATA
+  EEPROM.begin(512);
+  Serial.println("> Normal Boot Sequence Initiated");
+  Serial.println("> FLASH MEMORY: STORAGE INITIALIZED");  //Startup message 
+  stats.begin("fugu-stats", false); 
+  lifetimeKwh = stats.getFloat("lifetime", 0.0);          // Pulls saved value from flash
+  stats.end();
+  initializeFlashAutoload();                              //Load stored settings from flash memory       
+  Serial.println("> FLASH MEMORY: SAVED DATA LOADED");    //Startup message 
+
   //PWM INITIALIZATION
   ledcSetup(pwmChannel,pwmFrequency,pwmResolution);          //Set PWM Parameters
   ledcAttachPin(buck_IN, pwmChannel);                        //Set pin as PWM
@@ -337,39 +380,14 @@ void setup() {
   //ENABLE DUAL CORE MULTITASKING
   xTaskCreatePinnedToCore(coreTwo,"coreTwo",10000,NULL,0,&Core2,0);
   
-  //INITIALIZE AND LIOAD FLASH MEMORY DATA
-  EEPROM.begin(512);
-  Serial.println("> FLASH MEMORY: STORAGE INITIALIZED");  //Startup message 
-  stats.begin("fugu-stats", false); 
-  lifetimeKwh = stats.getFloat("lifetime", 0.0);          // Pulls saved value from flash
-  stats.end();
-  initializeFlashAutoload();                              //Load stored settings from flash memory       
-  Serial.println("> FLASH MEMORY: SAVED DATA LOADED");    //Startup message 
-
-  //LCD INITIALIZATION
-  if(enableLCD==1){
-    lcd.begin();
-    lcd.setBacklight(HIGH);
-    lcd.setCursor(0,0);
-    lcd.print("MPPT INITIALIZED");
-    lcd.setCursor(0,1);
-    lcd.print("FIRMWARE ");
-    lcd.print(firmwareInfo);    
+  //SETUP FINISHED
+  Serial.println("> MPPT HAS INITIALIZED");                //Startup message
+  if (enableLCD == 1) {
+    lcd.setCursor(0,0); lcd.print("   FUGU MPPT    ");
+    lcd.setCursor(0,1); lcd.print("  INITIALIZED   ");   
     delay(1500);
     lcd.clear();
   }
-  //FIRST BOOT SETUP WIZARD
-  stats.begin("fugu-stats", false);
-  isFirstBoot = stats.getBool("isFirstBoot", true);
-  ADS1015_Mode = stats.getBool("is1015", 0); // Load existing if not first boot
-  stats.end();
-  if(isFirstBoot) {
-    runSetupWizard();
-  }
- 
-  //SETUP FINISHED
-  Serial.println("> MPPT HAS INITIALIZED");                //Startup message
-
 }
 //================== CORE1: LOOP (DUAL CORE MODE) ======================//
 void loop() {

@@ -95,7 +95,7 @@ void displayConfig6(){
   lcd.setCursor(0,0);lcd.print("Harvest: ");
   lcd.print(lifetimeKwh, 1);
   lcd.print(" kWh   ");
-  lcd.setCursor(0,1);lcd.print("Since: ");
+  lcd.setCursor(0,1);lcd.print("DATE: ");
   lcd.print(startDate);
 }
 void factoryResetMessageLCD(){

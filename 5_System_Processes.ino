@@ -28,35 +28,210 @@ void System_Processes(){
   else{}      
 }
 
+String getInternetDate() {
+  // Synchronize via network pools using GMT+8 offset coordinates for the Philippines
+  configTime(28800, 0, "pool.ntp.org", "time.nist.gov");
+  Serial.print("Syncing time via NTP...");
+  
+  struct tm timeinfo;
+  int retry = 0;
+  while (!getLocalTime(&timeinfo) && retry < 8) {
+    delay(500);
+    Serial.print(".");
+    retry++;
+  }
+  
+  if (retry >= 8) {
+    Serial.println(" Failed!");
+    return "2025-01-01"; // Fallback safe default value
+  }
+  
+  Serial.println(" Success!");
+  char dateBuffer[12];
+  strftime(dateBuffer, sizeof(dateBuffer), "%Y-%m-%d", &timeinfo);
+  return String(dateBuffer);
+}
+
+void setupWiFi(){
+  if(enableWiFi==1){
+    Serial.begin(baudRate);
+    Serial.println("Setting up WiFi access point...");
+    WiFiManager wm;
+    wm.setConfigPortalTimeout(120);         // If no WiFi after 120s, give up and start charging
+    bool res;
+    res = wm.autoConnect("FUGU DIY MPPT"); // FUGU DIY MPPT Access point name
+    if(!res) {
+      Serial.println("WiFi Failed - Running in Offline Mode");
+      WIFI = 0;
+    }
+    else {
+        Serial.println("Connected to WiFi");
+        WIFI = 1;
+        lcd.setBacklight(HIGH);
+        lcd.clear();
+        lcd.setCursor(0,0);lcd.print("WiFi Connected  ");
+        lcd.setCursor(0,1);lcd.print("IP: ");
+        lcd.print(WiFi.localIP());
+        delay(3000);
+        menuPage = 0;
+    }
+    Blynk.config(BLYNK_AUTH_TOKEN, "blynk.cloud", 80);
+    Blynk.connect();
+    }
+}
+
 void runSetupWizard() {
   bool selectionMade = false;
-  setMenuPage = 1;
-  while (!selectionMade) {
+  int wizardStep = 1; // 1: ADC Selection, 2: WiFi Prompt, 3: Manual Date, 4: Finalize
+
+  // ================= STAGE 1: HARDWARE SELECTION =================
+  while (wizardStep == 1) {
     lcd.setCursor(0, 0);
     lcd.print("SELECT ADC TYPE ");
     if(setMenuPage == 1) { lcd.setCursor(0, 1); lcd.print(" >"); }
     else                 { lcd.setCursor(0, 1); lcd.print("= "); }
+    
     if(ADS1015_Mode == 0) { lcd.print("ADS1115 (16bit)"); }
     else                  { lcd.print("ADS1015 (12bit)"); }
 
     if(digitalRead(buttonRight) == 1 || digitalRead(buttonLeft) == 1) {
       while(digitalRead(buttonRight) == 1 || digitalRead(buttonLeft) == 1) {}
       if(ADS1015_Mode == 1) { ADS1015_Mode = 0; } else { ADS1015_Mode = 1; }
+      lcd.clear();
     }
+    
     if(digitalRead(buttonBack) == 1) {
       while(digitalRead(buttonBack) == 1) {}
       lcd.clear(); lcd.print("REQUIRED SETTING"); delay(1000); lcd.clear();
     }
+
     if(digitalRead(buttonSelect) == 1) {
       while(digitalRead(buttonSelect) == 1) {}
+      
+      // Lock in ADC profile straight away
       stats.begin("fugu-stats", false);
       stats.putBool("is1015", ADS1015_Mode);
-      stats.putBool("isFirstBoot", false);
       stats.end();
+      
       savedMessageLCD();
-      selectionMade = true;
+      wizardStep = 2; // Transition to Wi-Fi check
+      lcd.clear();
     }
   }
+
+  // ================= STAGE 2: USE WI-FI PROMPT =================
+  bool useWiFiSelection = true; // Default cursor on YES
+  
+  while (wizardStep == 2) {
+    lcd.setCursor(0, 0);
+    lcd.print("CONNECT TO WIFI?");
+    lcd.setCursor(0, 1);
+    if(useWiFiSelection) { lcd.print("   > YES    NO "); }
+    else                 { lcd.print("     YES  > NO "); }
+
+    if(digitalRead(buttonRight) == 1 || digitalRead(buttonLeft) == 1) {
+      while(digitalRead(buttonRight) == 1 || digitalRead(buttonLeft) == 1) {}
+      useWiFiSelection = !useWiFiSelection;
+      lcd.clear();
+    }
+
+    if(digitalRead(buttonSelect) == 1) {
+      while(digitalRead(buttonSelect) == 1) {}
+      lcd.clear();
+      
+      if(useWiFiSelection && enableWiFi == 1) {
+        // Runs your existing Tab 7 setup sequence
+        setupWiFi(); 
+        
+        if (WIFI == 1) {
+          String netDate = getInternetDate();
+          stats.begin("fugu-stats", false);
+          stats.putString("startDate", netDate);
+          stats.end();
+          
+          lcd.clear();
+          lcd.setCursor(0, 0); lcd.print("DATE SYNCED:   ");
+          lcd.setCursor(0, 1); lcd.print(netDate);
+          delay(2000);
+          wizardStep = 4; // Skip manual adjustments, jump straight to completion
+        } else {
+          lcd.setCursor(0,0); lcd.print("WIFI FAILED!    ");
+          lcd.setCursor(0,1); lcd.print("GOING TO MANUAL ");
+          delay(2000);
+          lcd.clear();
+          wizardStep = 3; // Connection failed, route to manual setup
+        }
+      } else {
+        WIFI = 0; // Explicitly enforce offline status
+        wizardStep = 3; // Route directly to manual date entry
+      }
+    }
+  }
+
+  // ================= STAGE 3: MANUAL DATE PICKER =================
+  int subStep = 0; // 0: Year, 1: Month, 2: Day
+  
+  while (wizardStep == 3) {
+    lcd.setCursor(0, 0);
+    lcd.print("SET START DATE: ");
+    
+    lcd.setCursor(0, 1);
+    // Indicate active section using caret markers
+    if(subStep == 0) lcd.print(">"); else lcd.print(" ");
+    lcd.print(wizardYear); lcd.print("-");
+    
+    if(subStep == 1) lcd.print(">"); else lcd.print("");
+    if(wizardMonth < 10) lcd.print("0"); lcd.print(wizardMonth); lcd.print("-");
+    
+    if(subStep == 2) lcd.print(">"); else lcd.print("");
+    if(wizardDay < 10) lcd.print("0"); lcd.print(wizardDay);
+    
+    if(digitalRead(buttonRight) == 1) {
+      while(digitalRead(buttonRight) == 1) {}
+      if(subStep == 0) { wizardYear++; if(wizardYear > 2040) wizardYear = 2040; } // Ceiling limit cap
+      if(subStep == 1) { wizardMonth++; if(wizardMonth > 12) wizardMonth = 1; }
+      if(subStep == 2) { wizardDay++; if(wizardDay > 31) wizardDay = 1; }
+      lcd.clear();
+    }
+    
+    if(digitalRead(buttonLeft) == 1) {
+      while(digitalRead(buttonLeft) == 1) {}
+      if(subStep == 0) { wizardYear--; if(wizardYear < 2020) wizardYear = 2020; } // Floor limit block
+      if(subStep == 1) { wizardMonth--; if(wizardMonth < 1) wizardMonth = 12; }
+      if(subStep == 2) { wizardDay--; if(wizardDay < 1) wizardDay = 31; }
+      lcd.clear();
+    }
+
+    if(digitalRead(buttonSelect) == 1) {
+      while(digitalRead(buttonSelect) == 1) {}
+      subStep++;
+      lcd.clear();
+      
+      if(subStep > 2) {
+        // Parse into uniform data array string string: YYYY-MM-DD
+        char manualDateBuf[12];
+        sprintf(manualDateBuf, "%04d-%02d-%02d", wizardYear, wizardMonth, wizardDay);
+        
+        stats.begin("fugu-stats", false);
+        stats.putString("startDate", String(manualDateBuf));
+        stats.end();
+        
+        savedMessageLCD();
+        wizardStep = 4; // Progress to finalization block
+      }
+    }
+  }
+
+  // ================= STAGE 4: FINALIZE SYSTEM =================
+  stats.begin("fugu-stats", false);
+  stats.putBool("isFirstBoot", false); // Close down the wizard state permanently
+  stats.end();
+
+  lcd.clear();
+  lcd.setCursor(0, 0); lcd.print("SETUP COMPLETE! ");
+  lcd.setCursor(0, 1); lcd.print("REBOOTING...    ");
+  delay(1500);
+  
   ESP.restart();
 }
 

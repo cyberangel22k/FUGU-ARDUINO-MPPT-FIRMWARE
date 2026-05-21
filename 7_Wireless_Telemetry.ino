@@ -1,36 +1,5 @@
   ////////// WIFI TELEMETRY ////////// 
-int ReCnctFlag;  // Reconnection Flag
-int ReCnctCount = 0;  // Reconnection counter
-
 BlynkTimer timer;
-
-void setupWiFi(){
-  if(enableWiFi==1){
-    Serial.begin(baudRate);
-    Serial.println("Setting up WiFi access point...");
-    WiFiManager wm;
-    wm.setConfigPortalTimeout(120);         // If no WiFi after 120s, give up and start charging
-    bool res;
-    res = wm.autoConnect("FUGU DIY MPPT"); // FUGU DIY MPPT Access point name
-    if(!res) {
-      Serial.println("WiFi Failed - Running in Offline Mode");
-      WIFI = 0;
-    }
-    else {
-        Serial.println("Connected to WiFi");
-        WIFI = 1;
-        lcd.setBacklight(HIGH);
-        lcd.clear();
-        lcd.setCursor(0,0);lcd.print("WiFi Connected  ");
-        lcd.setCursor(0,1);lcd.print("IP: ");
-        lcd.print(WiFi.localIP());
-        delay(3000);
-        menuPage = 0;
-    }
-    Blynk.config(BLYNK_AUTH_TOKEN, "blynk.cloud", 80);
-    Blynk.connect();
-    }
-}
 
 void Wireless_Telemetry(){
     if(enableWiFi==1){
