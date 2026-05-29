@@ -47,10 +47,10 @@ void displayConfig1(){
   else if(Wh<1000000000){lcd.print(MWh,0);lcd.print("MWh  ");} //999MWh__
   lcd.setCursor(13,0);lcd.print(temperature);lcd.print((char)223);padding100(temperature);
   lcd.setCursor(0,1);
-  if(buckEnable == 0)          { lcd.print("OFF  "); } // Charger disabled or resting
-  else if(chargingState == 0)  { lcd.print("MPPT "); } // Bulk Stage
-  else if(chargingState == 1)  { lcd.print("ABS  "); } // Absorption Stage
-  else if(chargingState == 2)  { lcd.print("FLT  "); } // Float Stage
+  if(buckEnable == 0)          { lcd.print("OFF"); } // Charger disabled or resting
+  else if(chargingState == 0)  { lcd.print("MPPT"); } // Bulk Stage
+  else if(chargingState == 1)  { lcd.print("ABS"); } // Absorption Stage
+  else if(chargingState == 2)  { lcd.print("FLT"); } // Float Stage
   if(BNC==0){lcd.setCursor(5,1); lcd.print(voltageOutput,1);lcd.print("V");padding10(voltageOutput);}
   else{lcd.setCursor(5,1);lcd.print("NOBAT ");}          
   lcd.setCursor(11,1);lcd.print(currentOutput,1);lcd.print("A");padding10(currentOutput);     
