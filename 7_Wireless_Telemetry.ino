@@ -1,9 +1,26 @@
+#include "BluetoothSerial.h"
+
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+
+BluetoothSerial SerialBT;
+bool btInitialized = false;
+
   ////////// WIFI TELEMETRY ////////// 
 BlynkTimer timer;
+extern bool otaUpdating;
 
 void Wireless_Telemetry(){
     if(enableWiFi==1){
       if(Blynk.connected()){
+        static bool isFirstConnect = true;
+        if(isFirstConnect) {
+           terminal.println(F("System Online."));
+           terminal.println(F("Firmware Update Successful."));
+           terminal.flush();
+           isFirstConnect = false;
+        }
         Blynk.run();
       }
     static unsigned long lastBlynkUpdate = 0;
@@ -14,8 +31,8 @@ void Wireless_Telemetry(){
     int LED1, LED2, LED3, LED4;                      //Declare LED brightness variable 
     if(buckEnable==1)      {LED1=200;}else{LED1=0;}  //BATTERY CHARGING STATUS
     if(batteryPercent>=99 ){LED2=200;}else{LED2=0;}  //FULL CHARGE STATUS
-    if(batteryPercent<=10) {LED3=200;}else{LED3=0;}  //LOW BATTERY STATUS
-    if(IUV==0)             {LED4=200;}else{LED4=0;}  //PV INPUT PRESENCE STATUS
+    if(loadStatus==1)       {LED3=200;}else{LED3=0;}  //LOAD/LDV STATUS
+    if(fanStatus==1)        {LED4=200;}else{LED4=0;}  //FAN STATUS
 
     Blynk.virtualWrite(V1, powerInput); 
     Blynk.virtualWrite(V2, batteryPercent);
@@ -28,17 +45,57 @@ void Wireless_Telemetry(){
     Blynk.virtualWrite(V9, energySavings);       
     Blynk.virtualWrite(V10, LED1);               //LED - Battery Charging Status
     Blynk.virtualWrite(V11, LED2);               //LED - Full Battery Charge Status
-    Blynk.virtualWrite(V12, LED3);               //LED - Low Battery Charge Status
-    Blynk.virtualWrite(V13, LED4);               //LED - PV Harvesting
+    Blynk.virtualWrite(V12, LED3);               //LED - LOAD/LDV STATUS
+    Blynk.virtualWrite(V13, LED4);               //LED - FAN STATUS
     Blynk.virtualWrite(V14, voltageBatteryMin);  //Minimum Battery Voltage (Read & Write)
     Blynk.virtualWrite(V15, voltageBatteryMax);  //Maximum Battery Voltage (Read & Write)
     Blynk.virtualWrite(V16, currentCharging);    //Charging Current  (Read & Write)
     Blynk.virtualWrite(V17, electricalPrice);    //Electrical Price  (Write)
     Blynk.virtualWrite(V18, daysRunning);        //Send number of days running to App
+
   }
   ////////// BLUETOOTH TELEMETRY ////////// 
   if(enableBluetooth==1){
-    //ADD BLUETOOTH CODE
+    
+    // Initialize the Bluetooth radio once
+    if(!btInitialized){
+        SerialBT.begin("FUGU_MPPT"); // This is the name you will see on your phone
+        btInitialized = true;
+    }
+
+    // We use a timer so we don't spam the phone with thousands of messages a second
+    static unsigned long lastBtUpdate = 0;
+    if(millis() - lastBtUpdate > 1500){ 
+        lastBtUpdate = millis();
+
+        // Format a clean, easy-to-read list for your mobile terminal
+        SerialBT.print("PV Power:       "); SerialBT.print(powerInput, 0); SerialBT.println(" W");
+        SerialBT.print("PV Voltage:     "); SerialBT.print(voltageInput, 1); SerialBT.println(" V");
+        SerialBT.print("Batt Voltage:   "); SerialBT.print(voltageOutput, 1); SerialBT.println(" V");
+        SerialBT.print("Charge Current: "); SerialBT.print(currentOutput, 2); SerialBT.println(" A");
+        SerialBT.print("Battery Level:  "); SerialBT.print(batteryPercent); SerialBT.println(" %");
+        SerialBT.print("System Temp:    "); SerialBT.print(temperature, 1); SerialBT.println(" C");
+        SerialBT.println("-----------------------------");
+    }
   }
  }
+}
+
+BLYNK_WRITE(InternalPinOTA) {
+    String otaUrl = param.asString();
+
+    // 1. FREEZE THE SYSTEM
+    otaUpdating = true;       // Stop the main loop immediately
+    buck_Disable();           // Turn off the solar charger for safety
+
+    // 2. DRAW FINAL LOADING SCREEN
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("UPDATING FIRMWARE");
+    lcd.setCursor(0, 1);
+    lcd.print("PLEASE WAIT...   ");
+    delay(500);               // Give the LCD a half-second to draw the text
+
+    // 3. START THE FLASH WRITE
+    performOTAUpdate(otaUrl);
 }

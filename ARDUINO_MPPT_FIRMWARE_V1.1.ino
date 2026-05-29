@@ -1,68 +1,9 @@
-#define BLYNK_TEMPLATE_ID "BLYNK_TEMPLATE_ID"          //copy from Blynk console
-#define BLYNK_TEMPLATE_NAME "BLYNK_TEMPLATE_NAME"      //copy from Blynk console
-#define BLYNK_AUTH_TOKEN "BLYNK_AUTH_TOKEN"            //copy from Blynk console
-/*  PROJECT FUGU FIRMWARE V1.10  (DIY 1kW Open Source MPPT Solar Charge Controller)
- *  By: TechBuilder (Angelo Casimiro)
- *  FIRMWARE STATUS: Verified Stable Build Version
- *  (Contact me for the experimental beta versions)
- *  -----------------------------------------------------------------------------------------------------------
- *  DATE CREATED:  02/07/2021 
- *  DATE MODIFIED: 30/08/2021
- *  -----------------------------------------------------------------------------------------------------------
- *  CONTACTS:
- *  GitHub - www.github.com/AngeloCasi (New firmware releases will only be available on GitHub Link)
- *  Email - casithebuilder@gmail.com
- *  YouTube - www.youtube.com/TechBuilder
- *  Facebook - www.facebook.com/AngeloCasii
- *  -----------------------------------------------------------------------------------------------------------
- *  PROGRAM FEATURES:
- *  - MPPT Perturbed Algorithm With CC-CV
- *  - WiFi & Bluetooth BLE Blynk Phone App Telemetry
- *  - Selectable Charger/PSU Mode (can operate as a programmable buck converter)
- *  - Dual Core ESP32 Unlocked (using xTaskCreatePinnedToCore(); )
- *  - Precision ADC Tracking Auto ADS1115/ADS1015 Detection (16bit/12bit I2C ADC)
- *  - Automatic ACS712-30A Current Sensor Calibration
- *  - Equipped With Battery Disconnect & Input Disconnect Recovery Protection Protocol
- *  - LCD Menu Interface (with settings & 4 display layouts)
- *  - Flash Memory (non-volatile settings save function)
- *  - Settable PWM Resolution (8bit-16bit)
- *  - Settable PWM Switching Frequency (1.2kHz - 312kHz)
- *  -----------------------------------------------------------------------------------------------------------
- *  PROGRAM INSTRUCTIONS:
- *  1.) Watch YouTube video tutorial first before using
- *  2.) Install the required Arduino libraries for the ICs
- *  3.) Select Tools > ESP32 Dev Board Board 
- *  4.) Do not modify code unless you know what you are doing
- *  5.) The MPPT's synchronous buck converter topology is code dependent, messing with the algorithm
- *      and safety protection protocols can be extremely dangerous especially when dealing with HVDC.
- *  6.) Install Blynk Legacy to access the phone app telemetry feature
- *  7.) Input the Blynk authentication in this program token sent by Blynk to your email after registration
- *  8.) Input WiFi SSID and password in this program
- *  9.) When using WiFi only mode, change "disableFlashAutoLoad = 0" to = 1 (LCD and buttons not installed)
- *      this prevents the MPPT unit to load the Flash Memory saved settings and will load the Arduino variable
- *      declarations set below instead
- *  -----------------------------------------------------------------------------------------------------------
- *  GOOGLE DRIVE PROJECT LINK: coming soon
- *  INSTRUCTABLE TUTORIAL LINK: coming soon
- *  YOUTUBE TUTORIAL LINK: www.youtube.com/watch?v=ShXNJM6uHLM
- *  GITHUB UPDATED FUGU FIRMWARE LINK: github.com/AngeloCasi/FUGU-ARDUINO-MPPT-FIRMWARE
- *  -----------------------------------------------------------------------------------------------------------
- *  ACTIVE CHIPS USED IN FIRMWARE:
- *  - ESP32 WROOM32
- *  - ADS1115/ADS1015 I2C ADC
- *  - ACS712-30A Current Sensor IC
- *  - IR2104 MOSFET Driver
- *  - CH340C USB TO UART IC
- *  - 16X2 I2C Character LCD
+#define BLYNK_TEMPLATE_ID "Copy-from-Blynk-console"
+#define BLYNK_TEMPLATE_NAME "Copy-from-Blynk-console"
+#define BLYNK_AUTH_TOKEN "Copy-from-Blynk-console"
+#define FIRMWARE_VERSION "1.1.3"
+#define BLYNK_FIRMWARE_VERSION "1.1.2"
 
- *  OTHER CHIPS USED IN PROJECT:
- *  - XL7005A 80V 0.4A Buck Regulator (2x)
- *  - AMS1115-3.3 LDO Linear Regulator 
- *  - AMS1115-5.0 LDO Linear Regulator  
- *  - CSD19505 N-ch MOSFETS (3x)
- *  - B1212 DC-DC Isolated Converter
- *  - SS310 Diodes
- */
 //================================ MPPT FIRMWARE LCD MENU INFO =====================================//
 // The lines below are for the Firmware Version info displayed on the MPPT's LCD Menu Interface     //
 //==================================================================================================//
@@ -72,12 +13,10 @@ firmwareDate      = "17/10/24",
 firmwareContactR1 = "www.youtube.com/",  
 firmwareContactR2 = "TechBuilder     ",
 startDate         = "2025-01-01";
-
-// Global parameters for the interactive Date Picker Wizard
 int
-wizardYear = 2025,  // Base starting point
-wizardMonth = 1,
-wizardDay = 1;
+wizardYear        = 2025,
+wizardMonth       = 1,
+wizardDay         = 1;
 
 //====================== ARDUINO LIBRARIES (ESP32 Compatible Libraries) ============================//
 // You will have to download and install the following libraries below in order to program the MPPT //
@@ -93,30 +32,35 @@ wizardDay = 1;
 #include <Adafruit_ADS1X15.h>       //SYSTEM PARAMETER  - ADS1115/ADS1015 ADC Library (By: Adafruit)
 #include <WiFiManager.h>            //SYSTEM PARAMETER  - Wifi Manager for configuring wifi credentials on initial startup or after a factory reset
 #include <Preferences.h>            //SYSTEM PARAMETER  - 
-#include <time.h>                   //SYSTEM PARAMETER  - 
-Preferences stats;
+#include <time.h>                   //SYSTEM PARAMETER  -
+#include "Presets.h"                //SYSTEM PARAMETER  - Battery Chemistry Presets 
+#include <WiFiClientSecure.h>       //SYSTEM PARAMETER  -
+#include <HTTPClient.h>             //SYSTEM PARAMETER  -
+#include <Update.h>                 //SYSTEM PARAMETER  -
+Preferences stats;                  //SYSTEM PARAMETER  -
 LiquidCrystal_I2C lcd(0x27,16,2);   //SYSTEM PARAMETER  - Configure LCD RowCol Size and I2C Address
 TaskHandle_t Core2;                 //SYSTEM PARAMETER  - Used for the ESP32 dual core operation
-Adafruit_ADS1115 ads;             //SYSTEM PARAMETER  - ADS1115 ADC Library (By: Adafruit) Kindly uncomment this if you are using ADS1115
+Adafruit_ADS1115 ads;               //SYSTEM PARAMETER  - ADS1115 ADC Library (By: Adafruit)
+WidgetTerminal terminal(V0);
 
 //====================================== USER PARAMETERS ===========================================//
 // The parameters below are the default parameters used when the MPPT charger settings have not     //
 // been set or saved through the LCD menu interface or mobile phone WiFi app. Some parameters here  //
 // would allow you to override or unlock features for advanced users (settings not on the LCD menu) //
 //==================================================================================================//
-#define backflow_MOSFET 27          //SYSTEM PARAMETER - Backflow MOSFET
-#define buck_IN         33          //SYSTEM PARAMETER - Buck MOSFET Driver PWM Pin
-#define buck_EN         32          //SYSTEM PARAMETER - Buck MOSFET Driver Enable Pin
-#define LED             2           //SYSTEM PARAMETER - LED Indicator GPIO Pin
-#define FAN             16          //SYSTEM PARAMETER - Fan GPIO Pin
-#define ADC_ALERT       34          //SYSTEM PARAMETER - Fan GPIO Pin
-#define TempSensor      35          //SYSTEM PARAMETER - Temperature Sensor GPIO Pin
-#define buttonLeft      18          //SYSTEM PARAMETER - 
-#define buttonRight     17          //SYSTEM PARAMETER -
-#define buttonBack      19          //SYSTEM PARAMETER - 
-#define buttonSelect    23          //SYSTEM PARAMETER -
+#define backflow_MOSFET 27          
+#define buck_IN         33          
+#define buck_EN         32          
+#define LED             2           
+#define FAN             16          
+#define ADC_ALERT       34
+#define TempSensor      35          
+#define Load            12          // dummy pin for Load/LVD logic, Use this pin if you want to implement the Load/LVD feature
+#define buttonLeft      18          
+#define buttonRight     17          
+#define buttonBack      19          
+#define buttonSelect    23
 #define BLYNK_PRINT Serial
-
 
 //====================================== USER PARAMETERS ==========================================//
 // The parameters below are the default parameters used when the MPPT charger settings have not    //
@@ -124,8 +68,8 @@ Adafruit_ADS1115 ads;             //SYSTEM PARAMETER  - ADS1115 ADC Library (By:
 // would allow you to override or unlock features for advanced users (settings not on the LCD menu)//
 //=================================================================================================//
 bool                                  
-MPPT_Mode               = 1,           //   USER PARAMETER - Enable MPPT algorithm, when disabled charger uses CC-CV algorithm 
-output_Mode             = 1,           //   USER PARAMETER - 0 = PSU MODE, 1 = Charger Mode  
+MPPT_Mode               = 1,           //   USER PARAMETER - MPPT Tracking Algorithm active 
+output_Mode             = 1,           //   USER PARAMETER - Charger Mode  
 disableFlashAutoLoad    = 0,           //   USER PARAMETER - Forces the MPPT to not use flash saved settings, enabling this "1" defaults to programmed firmware settings.
 enablePPWM              = 1,           //   USER PARAMETER - Enables Predictive PWM, this accelerates regulation speed (only applicable for battery charging application)
 enableWiFi              = 1,           //   USER PARAMETER - Enable WiFi Connection
@@ -134,13 +78,14 @@ enableBluetooth         = 1,           //   USER PARAMETER - Enable Bluetooth Co
 enableLCD               = 1,           //   USER PARAMETER - Enable LCD display
 enableLCDBacklight      = 1,           //   USER PARAMETER - Enable LCD display's backlight
 overrideFan             = 0,           //   USER PARAMETER - Fan always on
-enableDynamicCooling    = 0;           //   USER PARAMETER - Enable for PWM cooling control 
+enableDynamicCooling    = 0;           //   USER PARAMETER - Enable for PWM cooling control
+
 int
 serialTelemMode         = 1,           //  USER PARAMETER - Selects serial telemetry data feed (0 - Disable Serial, 1 - Display All Data, 2 - Display Essential, 3 - Number only)
 pwmResolution           = 11,          //  USER PARAMETER - PWM Bit Resolution 
 pwmFrequency            = 39000,       //  USER PARAMETER - PWM Switching Frequency - Hz (For Buck)
-temperatureFan          = 60,          //  USER PARAMETER - Temperature threshold for fan to turn on
-temperatureMax          = 90,          //  USER PARAMETER - Overtemperature, System Shudown When Exceeded (deg C)
+temperatureFan          = 40,          //  USER PARAMETER - Temperature threshold for fan to turn on
+temperatureMax          = 70,          //  USER PARAMETER - Overtemperature, System Shudown When Exceeded (deg C)
 telemCounterReset       = 0,           //  USER PARAMETER - Reset Telem Data Every (0 = Never, 1 = Day, 2 = Week, 3 = Month, 4 = Year) 
 errorTimeLimit          = 1000,        //  USER PARAMETER - Time interval for reseting error counter (milliseconds)  
 errorCountLimit         = 5,           //  USER PARAMETER - Maximum number of errors  
@@ -153,12 +98,26 @@ backlightSleepMode      = 0,           //  USER PARAMETER - 0 = Never, 1 = 10sec
 baudRate                = 500000;      //  USER PARAMETER - USB Serial Baud Rate (bps)
 
 float 
-voltageBatteryMax       = 27.3000,     //   USER PARAMETER - Maximum Battery Charging Voltage (Output V)
-voltageBatteryMin       = 22.4000,     //   USER PARAMETER - Minimum Battery Charging Voltage (Output V)
+voltageBatteryMax       = 14.4000,     //   USER PARAMETER - Maximum Battery Charging Voltage (Output V)
+voltageBatteryFloat     = 13.5000,     //   USER PARAMETER - Float Charging Voltage (Output V)
+voltageBatteryMin       = 10.0000,     //   USER PARAMETER - Minimum Battery Charging Voltage (Output V)
+voltageLVD              = 11.5000,     //   USER PARAMETER - Low Voltage Disconnect
+voltageLVR              = 12.5000,     //   USER PARAMETER - Low Voltage Reconnect
 currentCharging         = 30.0000,     //   USER PARAMETER - Maximum Charging Current (A - Output)
 electricalPrice         = 9.5000,      //   USER PARAMETER - Input electrical price per kWh (Dollar/kWh,Euro/kWh,Peso/kWh)
 lifetimeKwh             = 0.0;         //   USER PARAMETER - Lifetime harvested KW
 
+const unsigned long
+lvdDelay                = 30000;       //   USER PARAMETER - 30 Second debounce timer for heavy inverter loads
+
+//================================= CHARGING STAGE PARAMETERS ===================================//
+int
+chargingState           = 0;           // SYSTEM PARAMETER - 0 = BULK(MPPT), 1 = ABSORPTION(CV), 2 = FLOAT
+unsigned long
+absStartMillis          = 0,           // SYSTEM PARAMETER - Tracks when absorption phase started
+absWindow               = 7200000;     // USER PARAMETER - Absorption duration (e.g., 2 hours in ms)
+float
+tailCurrentThresh       = 0.5000;      // USER PARAMETER - Current threshold to finish absorption (Amps)
 
 //================================== CALIBRATION PARAMETERS =======================================//
 // The parameters below can be tweaked for designing your own MPPT charge controllers. Only modify //
@@ -167,10 +126,11 @@ lifetimeKwh             = 0.0;         //   USER PARAMETER - Lifetime harvested 
 //=================================================================================================//
 bool
 isFirstBoot             = true,       //  CALIB PARAMETER - Needed to set the correct ADC chip
+otaUpdating             = false,
 ADS1015_Mode            = 0;          //  CALIB PARAMETER - Use 1 for ADS1015 ADC model use 0 for ADS1115 ADC model
 int
 ADC_GainSelect          = 2,          //  CALIB PARAMETER - ADC Gain Selection (0→±6.144V 3mV/bit, 1→±4.096V 2mV/bit, 2→±2.048V 1mV/bit)
-avgCountVS              = 3,          //  CALIB PARAMETER - Voltage Sensor Average Sampling Count (Recommended: 3)
+avgCountVS              = 4,          //  CALIB PARAMETER - Voltage Sensor Average Sampling Count (Recommended: 3)
 avgCountCS              = 4,          //  CALIB PARAMETER - Current Sensor Average Sampling Count (Recommended: 4)
 avgCountTS              = 200;        //  CALIB PARAMETER - Temperature Sensor Average Sampling Count
 float
@@ -185,7 +145,7 @@ currentInAbsolute       = 31.0000,    //  CALIB PARAMETER - Maximum Input Curren
 currentOutAbsolute      = 50.0000,    //  CALIB PARAMETER - Maximum Output Current The System Can Handle (A - Input)
 PPWM_margin             = 99.5000,    //  CALIB PARAMETER - Minimum Operating Duty Cycle for Predictive PWM (%)
 PWM_MaxDC               = 97.0000,    //  CALIB PARAMETER - Maximum Operating Duty Cycle (%) 90%-97% is good
-efficiencyRate          = 1.0000,     //  CALIB PARAMETER - Theroretical Buck Efficiency (% decimal)
+efficiencyRate          = 0.9500,     //  CALIB PARAMETER - Theroretical Buck Efficiency (% decimal)
 currentMidPoint         = 2.5250,     //  CALIB PARAMETER - Current Sensor Midpoint (V)
 currentSens             = 0.0000,     //  CALIB PARAMETER - Current Sensor Sensitivity (V/A)
 currentSensV            = 0.0660,     //  CALIB PARAMETER - Current Sensor Sensitivity (mV/A)
@@ -199,6 +159,7 @@ vInSystemMin            = 10.000;     //  CALIB PARAMETER -
 bool
 buckEnable            = 0,           // SYSTEM PARAMETER - Buck Enable Status
 fanStatus             = 0,           // SYSTEM PARAMETER - Fan activity status (1 = On, 0 = Off)
+loadStatus            = 0,           // SYSTEM PARAMETER - Current state of the Load terminal 
 bypassEnable          = 0,           // SYSTEM PARAMETER - 
 chargingPause         = 0,           // SYSTEM PARAMETER - 
 lowPowerMode          = 0,           // SYSTEM PARAMETER - 
@@ -269,7 +230,7 @@ loopTime              = 0.0000,      // SYSTEM PARAMETER -
 outputDeviation       = 0.0000,      // SYSTEM PARAMETER - Output Voltage Deviation (%)
 buckEfficiency        = 0.0000,      // SYSTEM PARAMETER - Measure buck converter power conversion efficiency (only applicable to my dual current sensor version)
 floatTemp             = 0.0000,
-vOutSystemMin         = 0.0000;     //  CALIB PARAMETER - 
+vOutSystemMin         = 0.0000;      // CALIB PARAMETER - 
 unsigned long 
 currentErrorMillis    = 0,           //SYSTEM PARAMETER -
 currentButtonMillis   = 0,           //SYSTEM PARAMETER -
@@ -290,7 +251,8 @@ timeOn                = 0,           //SYSTEM PARAMETER -
 loopTimeStart         = 0,           //SYSTEM PARAMETER - Used for the loop cycle stop watch, records the loop start time
 loopTimeEnd           = 0,           //SYSTEM PARAMETER - Used for the loop cycle stop watch, records the loop end time
 secondsElapsed        = 0,           //SYSTEM PARAMETER - 
-lastSaveMillis        = 0;
+lastSaveMillis        = 0,           //SYSTEM PARAMETER - 
+lvdTimerStart         = 0;           //SYSTEM PARAMETER - Tracks how long voltage has been below LVD
 
 //====================================== MAIN PROGRAM =============================================//
 // The codes below contain all the system processes for the MPPT firmware. Most of them are called //
@@ -321,8 +283,8 @@ void setup() {
   pinMode(buck_EN,OUTPUT);
   pinMode(LED,OUTPUT); 
   pinMode(FAN,OUTPUT);
-  pinMode(TS,INPUT); 
-  pinMode(ADC_ALERT,INPUT);
+  pinMode(TS,INPUT);
+  pinMode(Load, OUTPUT);
   pinMode(buttonLeft,INPUT); 
   pinMode(buttonRight,INPUT); 
   pinMode(buttonBack,INPUT); 
@@ -342,11 +304,12 @@ void setup() {
   }
 
   //CHECK MEMORY FOR FIRST BOOT STATUS
-  stats.begin("fugu-stats", true);                           // Open in read-only mode
-  bool isFirstBoot = stats.getBool("isFirstBoot", true);     // Defaults to true if empty
-  startDate = stats.getString("startDate", "2025-01-01");    // Load your saved date
-  ADS1015_Mode = stats.getBool("is1015", 0);                 // Load existing if not first boot
+  stats.begin("fugu-stats", true);
+  bool isFirstBoot = stats.getBool("isFirstBoot", true);
+  startDate = stats.getString("startDate", "2025-01-01");
+  ADS1015_Mode = stats.getBool("is1015", 0);
   stats.end();
+  EEPROM.begin(512);
 
   //RUN SETUP WIZARD ON FIRST BOOT
   if(isFirstBoot) {
@@ -354,7 +317,6 @@ void setup() {
   }
 
   //INITIALIZE AND LIOAD FLASH MEMORY DATA
-  EEPROM.begin(512);
   Serial.println("> Normal Boot Sequence Initiated");
   Serial.println("> FLASH MEMORY: STORAGE INITIALIZED");  //Startup message 
   stats.begin("fugu-stats", false); 
@@ -391,10 +353,15 @@ void setup() {
 }
 //================== CORE1: LOOP (DUAL CORE MODE) ======================//
 void loop() {
+  if (otaUpdating == true) {
+    delay(100);
+    return;
+  }
   Read_Sensors();         //TAB#2 - Sensor data measurement and computation
   Device_Protection();    //TAB#3 - Fault detection algorithm  
   System_Processes();     //TAB#4 - Routine system processes 
   Charging_Algorithm();   //TAB#5 - Battery Charging Algorithm                    
   Onboard_Telemetry();    //TAB#6 - Onboard telemetry (USB & Serial Telemetry)
   LCD_Menu();             //TAB#8 - Low Power Algorithm
+  load();                 //TAB#9 - Load
 }

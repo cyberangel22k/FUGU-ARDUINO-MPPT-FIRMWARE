@@ -34,7 +34,7 @@ void padding10(int padVar){
   if(padVar<10){lcd.print(" ");}
 }
 void displayConfig1(){
-  lcd.setCursor(0,0);lcd.print(powerInput,0);lcd.print("W");padding100(powerInput);      
+  lcd.setCursor(0,0);lcd.print(powerInput,0);lcd.print("W");padding100(powerInput);       
   lcd.setCursor(5,0);
   if(Wh<10){lcd.print(Wh,3);lcd.print("Wh ");}                 //9.999Wh_
   else if(Wh<100){lcd.print(Wh,2);lcd.print("Wh ");}           //99.99Wh_
@@ -46,7 +46,11 @@ void displayConfig1(){
   else if(Wh<100000000){lcd.print(MWh,1);lcd.print("MWh ");}   //99.9MWh_ 
   else if(Wh<1000000000){lcd.print(MWh,0);lcd.print("MWh  ");} //999MWh__
   lcd.setCursor(13,0);lcd.print(temperature);lcd.print((char)223);padding100(temperature);
-  lcd.setCursor(0,1);lcd.print(batteryPercent);lcd.print("%");padding100(batteryPercent);
+  lcd.setCursor(0,1);
+  if(buckEnable == 0)          { lcd.print("OFF  "); } // Charger disabled or resting
+  else if(chargingState == 0)  { lcd.print("MPPT "); } // Bulk Stage
+  else if(chargingState == 1)  { lcd.print("ABS  "); } // Absorption Stage
+  else if(chargingState == 2)  { lcd.print("FLT  "); } // Float Stage
   if(BNC==0){lcd.setCursor(5,1); lcd.print(voltageOutput,1);lcd.print("V");padding10(voltageOutput);}
   else{lcd.setCursor(5,1);lcd.print("NOBAT ");}          
   lcd.setCursor(11,1);lcd.print(currentOutput,1);lcd.print("A");padding10(currentOutput);     
@@ -120,7 +124,7 @@ lcd.clear();
 void LCD_Menu(){
   int 
   menuPages          = 5,
-  subMenuPages       = 13,
+  subMenuPages       = 16,
   longPressTime      = 3000,
   longPressInterval  = 500,
   shortPressInterval = 100;
@@ -143,49 +147,9 @@ void LCD_Menu(){
     if(subMenuPage>subMenuPages){subMenuPage=0;}                     
     else if(subMenuPage<0){subMenuPage=subMenuPages;}  
     //--------------------------- SETTINGS MENU PAGES: ---------------------------// 
-    ///// SETTINGS MENU ITEM: SUPPLY ALGORITHM SELECT /////
-    if(subMenuPage==0){
-      lcd.setCursor(0,0);lcd.print("SUPPLY ALGORITHM");
-      if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
-      else{lcd.setCursor(0,1);lcd.print("= ");}
-      if(MPPT_Mode==1){lcd.print("MPPT + CC-CV  ");}
-      else{lcd.print("CC-CV ONLY    ");}
 
-      //SET MENU - BOOLTYPE
-      if(setMenuPage==0){boolTemp = MPPT_Mode;}
-      else{
-        if(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){
-          while(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){}
-          if(MPPT_Mode==1){MPPT_Mode=0;}else{MPPT_Mode=1;}
-        }
-        if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}MPPT_Mode = boolTemp;cancelledMessageLCD();setMenuPage=0;} 
-        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}
-      }     
-    }
-
-    ///// SETTINGS MENU ITEM: CHARER/PSU MODE /////
-    else if(subMenuPage==1){
-      lcd.setCursor(0,0);lcd.print("CHARGER/PSU MODE");
-      if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
-      else{lcd.setCursor(0,1);lcd.print("= ");}
-      if(output_Mode==1){lcd.print("CHARGER MODE  ");}
-      else{lcd.print("PSU MODE      ");}
-
-      //SET MENU - BOOLTYPE
-      if(setMenuPage==0){boolTemp = output_Mode;}
-      else{
-        if(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){
-          while(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){}
-          if(output_Mode==1){output_Mode=0;}else{output_Mode=1;}
-        }
-        if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}output_Mode = boolTemp;cancelledMessageLCD();setMenuPage=0;} 
-        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}
-      }     
-    }
-
-    
     ///// SETTINGS MENU ITEM: MAX BATTERY V /////
-    else if(subMenuPage==2){
+    else if(subMenuPage==0){
       lcd.setCursor(0,0);lcd.print("MAX BATTERY V   ");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -198,40 +162,87 @@ void LCD_Menu(){
         if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}voltageBatteryMax = floatTemp;cancelledMessageLCD();setMenuPage=0;} 
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
         currentMenuSetMillis = millis();
-        if(digitalRead(buttonRight)==1){                                                    //Right button press (increments setting values)
+        if(digitalRead(buttonRight)==1){
           while(digitalRead(buttonRight)==1){
-            if(millis()-currentMenuSetMillis>longPressTime){                                //Long Press     
-              voltageBatteryMax += 1.00;                                                    //Increment by 1
-              voltageBatteryMax = constrain(voltageBatteryMax,vOutSystemMin,vOutSystemMax); //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(voltageBatteryMax,2);delay(longPressInterval);   //Display settings data                               
+            if(millis()-currentMenuSetMillis>longPressTime){   
+              voltageBatteryMax += 1.00;
+              voltageBatteryMax = constrain(voltageBatteryMax,vOutSystemMin,vOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryMax,2);delay(longPressInterval);                              
             }
-            else{                                                                           //Short Press  
-              voltageBatteryMax += 0.01;                                                    //Increment by 0.01
-              voltageBatteryMax = constrain(voltageBatteryMax,vOutSystemMin,vOutSystemMax); //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(voltageBatteryMax,2);delay(shortPressInterval);  //Display settings data                            
+            else{ 
+              voltageBatteryMax += 0.01;
+              voltageBatteryMax = constrain(voltageBatteryMax,vOutSystemMin,vOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryMax,2);delay(shortPressInterval);                          
             }  
-            lcd.print("V   ");                                                              //Display unit
+            lcd.print("V   ");
           } 
         }
-        else if(digitalRead(buttonLeft)==1){                                                //Left button press (decrements setting values)
+        else if(digitalRead(buttonLeft)==1){
           while(digitalRead(buttonLeft)==1){
-            if(millis()-currentMenuSetMillis>longPressTime){                                //Long Press     
-              voltageBatteryMax -= 1.00;                                                    //Increment by 1
-              voltageBatteryMax = constrain(voltageBatteryMax,vOutSystemMin,vOutSystemMax); //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(voltageBatteryMax,2);delay(longPressInterval);   //Display settings data                               
+            if(millis()-currentMenuSetMillis>longPressTime){
+              voltageBatteryMax -= 1.00;
+              voltageBatteryMax = constrain(voltageBatteryMax,vOutSystemMin,vOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryMax,2);delay(longPressInterval);                             
             }
-            else{                                                                            //Short Press  
-              voltageBatteryMax -= 0.01;                                                     //Increment by 0.01
-              voltageBatteryMax =  constrain(voltageBatteryMax,vOutSystemMin,vOutSystemMax); //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(voltageBatteryMax,2);delay(shortPressInterval);   //Display settings data                                      
-            } 
-            lcd.print("V   ");                                                               //Display unit
+            else{
+              voltageBatteryMax -= 0.01;
+              voltageBatteryMax =  constrain(voltageBatteryMax,vOutSystemMin,vOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryMax,2);delay(shortPressInterval);                                     
+            }
+            lcd.print("V   ");
           } 
         }
       }    
     }
-    ///// SETTINGS MENU ITEM: MIN BATTERY V /////
-    else if(subMenuPage==3){
+    ///// SETTINGS MENU ITEM: FLOAT BATTERY V (NEW) /////
+    else if(subMenuPage==1){
+      lcd.setCursor(0,0);lcd.print("FLOAT BATTERY V ");
+      if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
+      else{lcd.setCursor(0,1);lcd.print("= ");}
+      lcd.setCursor(2,1);lcd.print(voltageBatteryFloat,2);lcd.print("V");
+      lcd.print("                ");
+      
+      //SET MENU - FLOATTYPE
+      if(setMenuPage==0){floatTemp = voltageBatteryFloat;}
+      else{
+        if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}voltageBatteryFloat = floatTemp;cancelledMessageLCD();setMenuPage=0;} 
+        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
+        currentMenuSetMillis = millis();
+        if(digitalRead(buttonRight)==1){                                                    
+          while(digitalRead(buttonRight)==1){
+            if(millis()-currentMenuSetMillis>longPressTime){                                     
+              voltageBatteryFloat += 1.00;
+              // Constrained dynamically so you can't overshoot the limits
+              voltageBatteryFloat = constrain(voltageBatteryFloat,voltageBatteryMin,voltageBatteryMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryFloat,2);delay(longPressInterval);
+            }
+            else{                                                                             
+              voltageBatteryFloat += 0.01;
+              voltageBatteryFloat = constrain(voltageBatteryFloat,voltageBatteryMin,voltageBatteryMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryFloat,2);delay(shortPressInterval);
+            }  
+            lcd.print("V   ");
+          } 
+        }
+        else if(digitalRead(buttonLeft)==1){                                                
+          while(digitalRead(buttonLeft)==1){
+            if(millis()-currentMenuSetMillis>longPressTime){                                   
+              voltageBatteryFloat -= 1.00;
+              voltageBatteryFloat = constrain(voltageBatteryFloat,voltageBatteryMin,voltageBatteryMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryFloat,2);delay(longPressInterval);
+            }
+            else{                                                                             
+              voltageBatteryFloat -= 0.01;
+              voltageBatteryFloat = constrain(voltageBatteryFloat,voltageBatteryMin,voltageBatteryMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryFloat,2);delay(shortPressInterval);
+            } 
+            lcd.print("V   ");
+          } 
+        }
+      }    
+    }
+  ///// SETTINGS MENU ITEM: MIN BATTERY V /////
+    else if(subMenuPage==2){
       lcd.setCursor(0,0);lcd.print("MIN BATTERY V   ");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -244,40 +255,130 @@ void LCD_Menu(){
         if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}voltageBatteryMin = floatTemp;cancelledMessageLCD();setMenuPage=0;} 
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
         currentMenuSetMillis = millis();
-        if(digitalRead(buttonRight)==1){                                                    //Right button press (increments setting values)
+        if(digitalRead(buttonRight)==1){
           while(digitalRead(buttonRight)==1){
-            if(millis()-currentMenuSetMillis>longPressTime){                                //Long Press     
-              voltageBatteryMin += 1.00;                                                    //Increment by 1
-              voltageBatteryMin = constrain(voltageBatteryMin,vOutSystemMin,vOutSystemMax); //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(voltageBatteryMin,2);delay(longPressInterval);   //Display settings data                               
+            if(millis()-currentMenuSetMillis>longPressTime){
+              voltageBatteryMin += 1.00;
+              voltageBatteryMin = constrain(voltageBatteryMin,vOutSystemMin,vOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryMin,2);delay(longPressInterval);                            
             }
-            else{                                                                           //Short Press  
-              voltageBatteryMin += 0.01;                                                    //Increment by 0.01
-              voltageBatteryMin = constrain(voltageBatteryMin,vOutSystemMin,vOutSystemMax); //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(voltageBatteryMin,2);delay(shortPressInterval);  //Display settings data                            
-            }  
-            lcd.print("V   ");                                                              //Display unit
+            else{
+              voltageBatteryMin += 0.01;
+              voltageBatteryMin = constrain(voltageBatteryMin,vOutSystemMin,vOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryMin,2);delay(shortPressInterval);                           
+            }
+            lcd.print("V   ");
+          }
+        }
+        else if(digitalRead(buttonLeft)==1){
+          while(digitalRead(buttonLeft)==1){
+            if(millis()-currentMenuSetMillis>longPressTime){
+              voltageBatteryMin -= 1.00;
+              voltageBatteryMin = constrain(voltageBatteryMin,vOutSystemMin,vOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryMin,2);delay(longPressInterval);                           
+            }
+            else{
+              voltageBatteryMin -= 0.01;
+              voltageBatteryMin =  constrain(voltageBatteryMin,vOutSystemMin,vOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(voltageBatteryMin,2);delay(shortPressInterval);                               
+            }
+            lcd.print("V   ");
           } 
         }
-        else if(digitalRead(buttonLeft)==1){                                                //Left button press (decrements setting values)
-          while(digitalRead(buttonLeft)==1){
-            if(millis()-currentMenuSetMillis>longPressTime){                                //Long Press     
-              voltageBatteryMin -= 1.00;                                                    //Increment by 1
-              voltageBatteryMin = constrain(voltageBatteryMin,vOutSystemMin,vOutSystemMax); //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(voltageBatteryMin,2);delay(longPressInterval);   //Display settings data                               
+      }    
+    }
+    ///// SETTINGS MENU ITEM: LOW VOLTAGE DISCONNECT (LVD) /////
+    else if(subMenuPage==3){
+      lcd.setCursor(0,0);lcd.print("LVD DISCONNECT  ");
+      if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
+      else{lcd.setCursor(0,1);lcd.print("= ");}
+      lcd.setCursor(2,1);lcd.print(voltageLVD,2);lcd.print("V");
+      lcd.print("                ");
+      
+      if(setMenuPage==0){floatTemp = voltageLVD;}
+      else{
+        if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}voltageLVD = floatTemp;cancelledMessageLCD();setMenuPage=0;} 
+        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
+        currentMenuSetMillis = millis();
+        if(digitalRead(buttonRight)==1){                                                    
+          while(digitalRead(buttonRight)==1){
+            if(millis()-currentMenuSetMillis>longPressTime){                     
+              voltageLVD += 1.00;
+              voltageLVD = constrain(voltageLVD,voltageBatteryMin,voltageLVR);
+              lcd.setCursor(2,1);lcd.print(voltageLVD,2);delay(longPressInterval);
             }
-            else{                                                                            //Short Press  
-              voltageBatteryMin -= 0.01;                                                     //Increment by 0.01
-              voltageBatteryMin =  constrain(voltageBatteryMin,vOutSystemMin,vOutSystemMax); //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(voltageBatteryMin,2);delay(shortPressInterval);   //Display settings data                                      
+            else{                                           
+              voltageLVD += 0.01;
+              voltageLVD = constrain(voltageLVD,voltageBatteryMin,voltageLVR);
+              lcd.setCursor(2,1);lcd.print(voltageLVD,2);delay(shortPressInterval);
+            }  
+            lcd.print("V   ");
+          } 
+        }
+        else if(digitalRead(buttonLeft)==1){                                                
+          while(digitalRead(buttonLeft)==1){
+            if(millis()-currentMenuSetMillis>longPressTime){                                     
+              voltageLVD -= 1.00;
+              voltageLVD = constrain(voltageLVD,voltageBatteryMin,voltageLVR);
+              lcd.setCursor(2,1);lcd.print(voltageLVD,2);delay(longPressInterval);
+            }
+            else{                                           
+              voltageLVD -= 0.01;
+              voltageLVD =  constrain(voltageLVD,voltageBatteryMin,voltageLVR);
+              lcd.setCursor(2,1);lcd.print(voltageLVD,2);delay(shortPressInterval);
             } 
-            lcd.print("V   ");                                                               //Display unit
+            lcd.print("V   ");
+          } 
+        }
+      }    
+    }
+    ///// SETTINGS MENU ITEM: LOW VOLTAGE RECONNECT (LVR) /////
+    else if(subMenuPage==4){
+      lcd.setCursor(0,0);lcd.print("LVR RECONNECT   ");
+      if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
+      else{lcd.setCursor(0,1);lcd.print("= ");}
+      lcd.setCursor(2,1);lcd.print(voltageLVR,2);lcd.print("V");
+      lcd.print("                ");
+      
+      if(setMenuPage==0){floatTemp = voltageLVR;}
+      else{
+        if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}voltageLVR = floatTemp;cancelledMessageLCD();setMenuPage=0;} 
+        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
+        currentMenuSetMillis = millis();
+        if(digitalRead(buttonRight)==1){                                                    
+          while(digitalRead(buttonRight)==1){
+            if(millis()-currentMenuSetMillis>longPressTime){                     
+              voltageLVR += 1.00;
+              voltageLVR = constrain(voltageLVR,voltageLVD,voltageBatteryMax);
+              lcd.setCursor(2,1);lcd.print(voltageLVR,2);delay(longPressInterval);
+            }
+            else{                                           
+              voltageLVR += 0.01;
+              voltageLVR = constrain(voltageLVR,voltageLVD,voltageBatteryMax);
+              lcd.setCursor(2,1);lcd.print(voltageLVR,2);delay(shortPressInterval);
+            }  
+            lcd.print("V   ");
+          } 
+        }
+        else if(digitalRead(buttonLeft)==1){                                                
+          while(digitalRead(buttonLeft)==1){
+            if(millis()-currentMenuSetMillis>longPressTime){                                     
+              voltageLVR -= 1.00;
+              voltageLVR = constrain(voltageLVR,voltageLVD,voltageBatteryMax);
+              lcd.setCursor(2,1);lcd.print(voltageLVR,2);delay(longPressInterval);
+            }
+            else{                                           
+              voltageLVR -= 0.01;
+              voltageLVR =  constrain(voltageLVR,voltageLVD,voltageBatteryMax);
+              lcd.setCursor(2,1);lcd.print(voltageLVR,2);delay(shortPressInterval);
+            } 
+            lcd.print("V   ");
           } 
         }
       }    
     }
     ///// SETTINGS MENU ITEM: CHARGING CURRENT /////
-    else if(subMenuPage==4){
+    else if(subMenuPage==5){
       lcd.setCursor(0,0);lcd.print("CHARGING CURRENT");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -290,40 +391,40 @@ void LCD_Menu(){
         if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}currentCharging = floatTemp;cancelledMessageLCD();setMenuPage=0;} 
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
         currentMenuSetMillis = millis();
-        if(digitalRead(buttonRight)==1){                                                  //Right button press (increments setting values)
+        if(digitalRead(buttonRight)==1){
           while(digitalRead(buttonRight)==1){
-            if(millis()-currentMenuSetMillis>longPressTime){                              //Long Press     
-              currentCharging += 1.00;                                                    //Increment by 1
-              currentCharging = constrain(currentCharging,0.0,cOutSystemMax);             //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(currentCharging,2);delay(longPressInterval);   //Display settings data                               
+            if(millis()-currentMenuSetMillis>longPressTime){ 
+              currentCharging += 1.00;
+              currentCharging = constrain(currentCharging,0.0,cOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(currentCharging,2);delay(longPressInterval);                          
             }
-            else{                                                                         //Short Press  
-              currentCharging += 0.01;                                                    //Increment by 0.01
-              currentCharging = constrain(currentCharging,0.0,cOutSystemMax);             //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(currentCharging,2);delay(shortPressInterval);  //Display settings data                            
+            else{
+              currentCharging += 0.01;
+              currentCharging = constrain(currentCharging,0.0,cOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(currentCharging,2);delay(shortPressInterval);                           
             }  
-            lcd.print("A   ");                                                            //Display unit
+            lcd.print("A   ");
           } 
         }
-        else if(digitalRead(buttonLeft)==1){                                              //Left button press (decrements setting values)
+        else if(digitalRead(buttonLeft)==1){
           while(digitalRead(buttonLeft)==1){
-            if(millis()-currentMenuSetMillis>longPressTime){                              //Long Press     
-              currentCharging -= 1.00;                                                    //Increment by 1
-              currentCharging = constrain(currentCharging,0.0,cOutSystemMax);             //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(currentCharging,2);delay(longPressInterval);   //Display settings data                               
+            if(millis()-currentMenuSetMillis>longPressTime){   
+              currentCharging -= 1.00;
+              currentCharging = constrain(currentCharging,0.0,cOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(currentCharging,2);delay(longPressInterval);                          
             }
-            else{                                                                         //Short Press  
-              currentCharging -= 0.01;                                                    //Increment by 0.01
-              currentCharging =  constrain(currentCharging,0.0,cOutSystemMax);            //Limit settings values to a range
-              lcd.setCursor(2,1);lcd.print(currentCharging,2);delay(shortPressInterval);  //Display settings data                                      
+            else{
+              currentCharging -= 0.01;
+              currentCharging =  constrain(currentCharging,0.0,cOutSystemMax);
+              lcd.setCursor(2,1);lcd.print(currentCharging,2);delay(shortPressInterval);                                   
             } 
-            lcd.print("A   ");                                                            //Display unit
+            lcd.print("A   ");
           } 
         }
       } 
     }
     ///// SETTINGS MENU ITEM: COOLING FAN /////
-    else if(subMenuPage==5){
+    else if(subMenuPage==6){
       lcd.setCursor(0,0);lcd.print("COOLING FAN     ");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -342,7 +443,7 @@ void LCD_Menu(){
       } 
     }
     ///// SETTINGS MENU ITEM: FAN TRIG TEMP /////
-    else if(subMenuPage==6){
+    else if(subMenuPage==7){
       lcd.setCursor(0,0);lcd.print("FAN TRIGGER TEMP");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -354,26 +455,26 @@ void LCD_Menu(){
       else{
         if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}temperatureFan = intTemp;cancelledMessageLCD();setMenuPage=0;} 
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
-        if(digitalRead(buttonRight)==1){                                              //Right button press (increments setting values)
+        if(digitalRead(buttonRight)==1){
           while(digitalRead(buttonRight)==1){   
-            temperatureFan++;                                                       //Increment by 1
-            temperatureFan = constrain(temperatureFan,0,100);                       //Limit settings values to a range
-            lcd.setCursor(2,1);lcd.print(temperatureFan);delay(shortPressInterval); //Display settings data                               
-            lcd.print((char)223);lcd.print("C    ");                                //Display unit
+            temperatureFan++;
+            temperatureFan = constrain(temperatureFan,0,100);
+            lcd.setCursor(2,1);lcd.print(temperatureFan);delay(shortPressInterval);                             
+            lcd.print((char)223);lcd.print("C    ");
           } 
         }
-        else if(digitalRead(buttonLeft)==1){                                        //Left button press (decrements setting values)
+        else if(digitalRead(buttonLeft)==1){
           while(digitalRead(buttonLeft)==1){ 
-            temperatureFan--;                                                       //Increment by 1
-            temperatureFan = constrain(temperatureFan,0,100);                       //Limit settings values to a range
-            lcd.setCursor(2,1);lcd.print(temperatureFan);delay(shortPressInterval); //Display settings data                               
-            lcd.print((char)223);lcd.print("C    ");                                //Display unit
+            temperatureFan--;
+            temperatureFan = constrain(temperatureFan,0,100);
+            lcd.setCursor(2,1);lcd.print(temperatureFan);delay(shortPressInterval);                             
+            lcd.print((char)223);lcd.print("C    ");
           } 
         }
       }         
     }
     ///// SETTINGS MENU ITEM: SHUTDOWN TEMP /////
-    else if(subMenuPage==7){
+    else if(subMenuPage==8){
       lcd.setCursor(0,0);lcd.print("SHUTDOWN TEMP   ");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -385,26 +486,26 @@ void LCD_Menu(){
       else{
         if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}temperatureMax = intTemp;cancelledMessageLCD();setMenuPage=0;} 
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
-        if(digitalRead(buttonRight)==1){                                              //Right button press (increments setting values)
+        if(digitalRead(buttonRight)==1){
           while(digitalRead(buttonRight)==1){   
-            temperatureMax++;                                                       //Increment by 1
-            temperatureMax = constrain(temperatureMax,0,120);                       //Limit settings values to a range
-            lcd.setCursor(2,1);lcd.print(temperatureMax);delay(shortPressInterval); //Display settings data                               
-            lcd.print((char)223);lcd.print("C    ");                                //Display unit
+            temperatureMax++;
+            temperatureMax = constrain(temperatureMax,0,120);
+            lcd.setCursor(2,1);lcd.print(temperatureMax);delay(shortPressInterval);                               
+            lcd.print((char)223);lcd.print("C    ");
           } 
         }
-        else if(digitalRead(buttonLeft)==1){                                        //Left button press (decrements setting values)
+        else if(digitalRead(buttonLeft)==1){
           while(digitalRead(buttonLeft)==1){ 
-            temperatureMax--;                                                       //Increment by 1
-            temperatureMax = constrain(temperatureMax,0,120);                       //Limit settings values to a range
-            lcd.setCursor(2,1);lcd.print(temperatureMax);delay(shortPressInterval); //Display settings data                               
-            lcd.print((char)223);lcd.print("C    ");                                //Display unit
+            temperatureMax--;
+            temperatureMax = constrain(temperatureMax,0,120);
+            lcd.setCursor(2,1);lcd.print(temperatureMax);delay(shortPressInterval);                               
+            lcd.print((char)223);lcd.print("C    ");
           } 
         }
       }       
     }
     ///// SETTINGS MENU ITEM: WIFI FEATURE /////
-    else if(subMenuPage==8){
+    else if(subMenuPage==9){
       lcd.setCursor(0,0);lcd.print("WIFI FEATURE    ");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -423,7 +524,7 @@ void LCD_Menu(){
       }       
     }
     ///// SETTINGS MENU ITEM: RESET WIFI CREDENTIALS /////
-    else if(subMenuPage==9){
+    else if(subMenuPage==10){
       if(setMenuPage==0){
         lcd.setCursor(0,0);lcd.print("RESET WIFI CRED-");
         lcd.setCursor(0,1);lcd.print("> PRESS SELECT  ");  
@@ -436,8 +537,28 @@ void LCD_Menu(){
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}if(confirmationMenu==1){WifiReset();}setMenuPage=0;confirmationMenu=0;subMenuPage=0;}
       } 
     } 
+    ///// SETTINGS MENU ITEM: BLUETOOTH FEATURE /////
+    else if(subMenuPage==11){
+      lcd.setCursor(0,0);lcd.print("BLUETOOTH RADIO ");
+      if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
+      else{lcd.setCursor(0,1);lcd.print("= ");}
+      if(enableBluetooth==1){lcd.print("ENABLED       ");}
+      else{lcd.print("DISABLED      ");}
+
+      //SET MENU - BOOLTYPE
+      if(setMenuPage==0){boolTemp = enableBluetooth;}
+      else{
+        if(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){
+          while(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){}
+          if(enableBluetooth==1){enableBluetooth=0;}else{enableBluetooth=1;}
+        }
+        
+        if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}enableBluetooth = boolTemp;cancelledMessageLCD();setMenuPage=0;} 
+        if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}
+      }       
+    }
     ///// SETTINGS MENU ITEM: AUTOLOAD /////
-    else if(subMenuPage==10){
+    else if(subMenuPage==12){
       lcd.setCursor(0,0);lcd.print("AUTOLOAD FEATURE");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -456,7 +577,7 @@ void LCD_Menu(){
       }       
     }
     ///// SETTINGS MENU ITEM: BACKLIGHT SLEEP /////
-    else if(subMenuPage==11){
+    else if(subMenuPage==13){
       lcd.setCursor(0,0);lcd.print("BACKLIGHT SLEEP ");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -471,9 +592,9 @@ void LCD_Menu(){
       else{
         if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}backlightSleepMode = intTemp;cancelledMessageLCD();setMenuPage=0;} 
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
-        if(digitalRead(buttonRight)==1){                                                    //Right button press (increments setting values)
-          backlightSleepMode++;                                                           //Increment by 1
-          backlightSleepMode = constrain(backlightSleepMode,0,3);                         //Limit settings values to a range
+        if(digitalRead(buttonRight)==1){
+          backlightSleepMode++;
+          backlightSleepMode = constrain(backlightSleepMode,0,3);
           lcd.setCursor(2,1);
           if(backlightSleepMode==1)     {lcd.print("10 SECONDS    ");}
           else if(backlightSleepMode==2){lcd.print("5 MINUTES     ");}
@@ -481,9 +602,9 @@ void LCD_Menu(){
           else{lcd.print("NEVER         ");}    
           while(digitalRead(buttonRight)==1){} 
         }
-        else if(digitalRead(buttonLeft)==1){                                              //Left button press (decrements setting values)
-          backlightSleepMode--;                                                           //Increment by 1
-          backlightSleepMode = constrain(backlightSleepMode,0,3);                         //Limit settings values to a range
+        else if(digitalRead(buttonLeft)==1){
+          backlightSleepMode--;
+          backlightSleepMode = constrain(backlightSleepMode,0,3);
           lcd.setCursor(2,1);
           if(backlightSleepMode==1)     {lcd.print("10 SECONDS    ");}
           else if(backlightSleepMode==2){lcd.print("5 MINUTES     ");}
@@ -494,7 +615,7 @@ void LCD_Menu(){
       }         
     }
     ///// SETTINGS MENU ITEM: ONBOARD TELEMETRY /////
-    else if(subMenuPage==12){
+    else if(subMenuPage==14){
       lcd.setCursor(0,0);lcd.print("USB TELEMETRY:  ");
       if(setMenuPage==1){lcd.setCursor(0,1);lcd.print(" >");}
       else{lcd.setCursor(0,1);lcd.print("= ");}
@@ -509,9 +630,9 @@ void LCD_Menu(){
       else{
         if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}serialTelemMode = intTemp;cancelledMessageLCD();setMenuPage=0;} 
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}saveSettings();setMenuPage=0;savedMessageLCD();}     
-        if(digitalRead(buttonRight)==1){                                                    //Right button press (increments setting values)
-          serialTelemMode++;                                                           //Increment by 1
-          serialTelemMode = constrain(serialTelemMode,0,3);                         //Limit settings values to a range
+        if(digitalRead(buttonRight)==1){
+          serialTelemMode++;
+          serialTelemMode = constrain(serialTelemMode,0,3);
           lcd.setCursor(2,1);
         if(serialTelemMode == 1)      {lcd.print("DISPLAY ALL   ");}
         else if(serialTelemMode == 2) {lcd.print("ESSENTIAL     ");}
@@ -519,9 +640,9 @@ void LCD_Menu(){
         else{lcd.print("DISABLED      ");}
           while(digitalRead(buttonRight)==1){} 
         }
-        else if(digitalRead(buttonLeft)==1){                                              //Left button press (decrements setting values)
-          serialTelemMode--;                                                           //Increment by 1
-          serialTelemMode = constrain(serialTelemMode,0,3);                         //Limit settings values to a range
+        else if(digitalRead(buttonLeft)==1){
+          serialTelemMode--;
+          serialTelemMode = constrain(serialTelemMode,0,3);
           lcd.setCursor(2,1);
         if(serialTelemMode == 1)      {lcd.print("DISPLAY ALL   ");}
         else if(serialTelemMode == 2) {lcd.print("ESSENTIAL     ");}
@@ -533,21 +654,21 @@ void LCD_Menu(){
     }        
         
     ///// SETTINGS MENU ITEM: FACTORY RESET /////
-    else if(subMenuPage==13){
+    else if(subMenuPage==15){
       if(setMenuPage==0){
         lcd.setCursor(0,0);lcd.print("FACTORY RESET   ");
         lcd.setCursor(0,1);lcd.print("> PRESS SELECT  ");  
       }
       else{
-        if(confirmationMenu==0){lcd.setCursor(0,0);lcd.print(" ARE YOU SURE?  ");lcd.setCursor(0,1);lcd.print("  >NO      YES  ");}  // Display ">No"
-        else{lcd.setCursor(0,0);lcd.print(" ARE YOU SURE?  ");lcd.setCursor(0,1);lcd.print("   NO     >YES  ");}                     // Display ">YES"
+        if(confirmationMenu==0){lcd.setCursor(0,0);lcd.print(" ARE YOU SURE?  ");lcd.setCursor(0,1);lcd.print("  >NO      YES  ");}
+        else{lcd.setCursor(0,0);lcd.print(" ARE YOU SURE?  ");lcd.setCursor(0,1);lcd.print("   NO     >YES  ");}
         if(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){while(digitalRead(buttonRight)==1||digitalRead(buttonLeft)==1){}if(confirmationMenu==0){confirmationMenu=1;}else{confirmationMenu=0;}}  //Cycle Yes NO
         if(digitalRead(buttonBack)==1){while(digitalRead(buttonBack)==1){}cancelledMessageLCD();setMenuPage=0;confirmationMenu=0;} //Cancel
         if(digitalRead(buttonSelect)==1){while(digitalRead(buttonSelect)==1){}if(confirmationMenu==1){factoryReset();factoryResetMessageLCD();}setMenuPage=0;confirmationMenu=0;subMenuPage=0;}
       } 
     }  
     ///// SETTINGS MENU ITEM: FIRMWARE VERSION /////
-    else if(subMenuPage==14){
+    else if(subMenuPage==16){
       if(setMenuPage==0){
         lcd.setCursor(0,0);lcd.print("FIRMWARE VERSION");
         lcd.setCursor(0,1);lcd.print(firmwareInfo);    
@@ -563,7 +684,6 @@ void LCD_Menu(){
   //MAIN MENU
   else if(settingMode==0){
     chargingPause = 0;
-
     //LCD BACKLIGHT SLEEP
     lcdBacklight();
 

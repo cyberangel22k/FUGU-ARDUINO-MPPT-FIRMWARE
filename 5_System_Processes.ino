@@ -82,12 +82,11 @@ void setupWiFi(){
 
 void runSetupWizard() {
   bool selectionMade = false;
-  int wizardStep = 1; // 1: ADC Selection, 2: WiFi Prompt, 3: Manual Date, 4: Finalize
+  int wizardStep = 1; // 1: ADC, 2: Battery, 3: Voltage, 4: WiFi, 5: Date, 6: Finalize
 
   // ================= STAGE 1: HARDWARE SELECTION =================
   while (wizardStep == 1) {
-    lcd.setCursor(0, 0);
-    lcd.print("SELECT ADC TYPE ");
+    lcd.setCursor(0, 0); lcd.print("SELECT ADC TYPE ");
     if(setMenuPage == 1) { lcd.setCursor(0, 1); lcd.print(" >"); }
     else                 { lcd.setCursor(0, 1); lcd.print("= "); }
     
@@ -107,24 +106,81 @@ void runSetupWizard() {
 
     if(digitalRead(buttonSelect) == 1) {
       while(digitalRead(buttonSelect) == 1) {}
-      
       // Lock in ADC profile straight away
       stats.begin("fugu-stats", false);
       stats.putBool("is1015", ADS1015_Mode);
       stats.end();
       
       savedMessageLCD();
-      wizardStep = 2; // Transition to Wi-Fi check
+      wizardStep = 2; // Transition to Battery Type
       lcd.clear();
     }
   }
 
-  // ================= STAGE 2: USE WI-FI PROMPT =================
-  bool useWiFiSelection = true; // Default cursor on YES
-  
+  // ================= STAGE 2: BATTERY TYPE (NEW) =================
+  int battType = 0; // 0=LiFePO4, 1=Li-Ion, 2=AGM, 3=Flooded, 4=Custom
   while (wizardStep == 2) {
-    lcd.setCursor(0, 0);
-    lcd.print("CONNECT TO WIFI?");
+    lcd.setCursor(0, 0); lcd.print("BATTERY TYPE:   ");
+    lcd.setCursor(0, 1); lcd.print("> "); 
+    lcd.setCursor(2, 1);
+    
+    if (battType == 0)      lcd.print("LiFePO4       ");
+    else if (battType == 1) lcd.print("Li-Ion 3S     ");
+    else if (battType == 2) lcd.print("AGM / Sealed  ");
+    else if (battType == 3) lcd.print("Flooded Lead  ");
+    else if (battType == 4) lcd.print("Custom / Skip ");
+
+    if(digitalRead(buttonRight) == 1) {
+      while(digitalRead(buttonRight) == 1) {}
+      battType++;
+      if(battType > 4) battType = 0;
+      lcd.clear();
+    }
+    if(digitalRead(buttonLeft) == 1) {
+      while(digitalRead(buttonLeft) == 1) {}
+      battType--;
+      if(battType < 0) battType = 4;
+      lcd.clear();
+    }
+    if(digitalRead(buttonSelect) == 1) {
+      while(digitalRead(buttonSelect) == 1) {}
+      wizardStep = 3; // Transition to System Voltage
+      lcd.clear();
+    }
+  }
+
+  // ================= STAGE 3: SYSTEM VOLTAGE (NEW) =================
+  int sysVolts = 12; // Valid options: 12, 24, 48
+  while (wizardStep == 3) {
+    lcd.setCursor(0, 0); lcd.print("SYSTEM VOLTAGE: ");
+    lcd.setCursor(0, 1); lcd.print("> ");
+    lcd.setCursor(2, 1);
+    lcd.print(sysVolts); lcd.print("V           ");
+
+    if(digitalRead(buttonRight) == 1 || digitalRead(buttonLeft) == 1) {
+      while(digitalRead(buttonRight) == 1 || digitalRead(buttonLeft) == 1) {}
+      if (sysVolts == 12) sysVolts = 24;
+      else if (sysVolts == 24) sysVolts = 48;
+      else if (sysVolts == 48) sysVolts = 12;
+      lcd.clear();
+    }
+    if(digitalRead(buttonSelect) == 1) {
+      while(digitalRead(buttonSelect) == 1) {}
+      
+      // Compute thresholds and save them to EEPROM immediately!
+      applyBatteryPreset(battType, sysVolts);
+      saveSettings(); 
+      
+      savedMessageLCD();
+      wizardStep = 4; // Transition to Wi-Fi Setup
+      lcd.clear();
+    }
+  }
+
+  // ================= STAGE 4: USE WI-FI PROMPT =================
+  bool useWiFiSelection = true; // Default cursor on YES
+  while (wizardStep == 4) {
+    lcd.setCursor(0, 0); lcd.print("CONNECT TO WIFI?");
     lcd.setCursor(0, 1);
     if(useWiFiSelection) { lcd.print("   > YES    NO "); }
     else                 { lcd.print("     YES  > NO "); }
@@ -140,9 +196,10 @@ void runSetupWizard() {
       lcd.clear();
       
       if(useWiFiSelection && enableWiFi == 1) {
-        // Runs your existing Tab 7 setup sequence
-        setupWiFi(); 
-        
+        lcd.setCursor(0, 0); lcd.print("CONNECT TO WIFI ");
+        lcd.setCursor(0, 1); lcd.print("USE PHONE APP...");
+        delay(10000);
+        setupWiFi();
         if (WIFI == 1) {
           String netDate = getInternetDate();
           stats.begin("fugu-stats", false);
@@ -153,30 +210,26 @@ void runSetupWizard() {
           lcd.setCursor(0, 0); lcd.print("DATE SYNCED:   ");
           lcd.setCursor(0, 1); lcd.print(netDate);
           delay(2000);
-          wizardStep = 4; // Skip manual adjustments, jump straight to completion
+          wizardStep = 6; // Skip manual adjustments, jump straight to completion
         } else {
           lcd.setCursor(0,0); lcd.print("WIFI FAILED!    ");
           lcd.setCursor(0,1); lcd.print("GOING TO MANUAL ");
-          delay(2000);
-          lcd.clear();
-          wizardStep = 3; // Connection failed, route to manual setup
+          delay(2000); lcd.clear();
+          wizardStep = 5; // Connection failed, route to manual setup
         }
       } else {
         WIFI = 0; // Explicitly enforce offline status
-        wizardStep = 3; // Route directly to manual date entry
+        wizardStep = 5; // Route directly to manual date entry
       }
     }
   }
 
-  // ================= STAGE 3: MANUAL DATE PICKER =================
+  // ================= STAGE 5: MANUAL DATE PICKER =================
   int subStep = 0; // 0: Year, 1: Month, 2: Day
-  
-  while (wizardStep == 3) {
-    lcd.setCursor(0, 0);
-    lcd.print("SET START DATE: ");
-    
+  while (wizardStep == 5) {
+    lcd.setCursor(0, 0); lcd.print("SET START DATE: ");
     lcd.setCursor(0, 1);
-    // Indicate active section using caret markers
+    
     if(subStep == 0) lcd.print(">"); else lcd.print(" ");
     lcd.print(wizardYear); lcd.print("-");
     
@@ -188,27 +241,24 @@ void runSetupWizard() {
     
     if(digitalRead(buttonRight) == 1) {
       while(digitalRead(buttonRight) == 1) {}
-      if(subStep == 0) { wizardYear++; if(wizardYear > 2040) wizardYear = 2040; } // Ceiling limit cap
+      if(subStep == 0) { wizardYear++;  if(wizardYear > 2040) wizardYear = 2040; } 
       if(subStep == 1) { wizardMonth++; if(wizardMonth > 12) wizardMonth = 1; }
-      if(subStep == 2) { wizardDay++; if(wizardDay > 31) wizardDay = 1; }
+      if(subStep == 2) { wizardDay++;   if(wizardDay > 31) wizardDay = 1; }
       lcd.clear();
     }
-    
     if(digitalRead(buttonLeft) == 1) {
       while(digitalRead(buttonLeft) == 1) {}
-      if(subStep == 0) { wizardYear--; if(wizardYear < 2020) wizardYear = 2020; } // Floor limit block
+      if(subStep == 0) { wizardYear--;  if(wizardYear < 2020) wizardYear = 2020; } 
       if(subStep == 1) { wizardMonth--; if(wizardMonth < 1) wizardMonth = 12; }
-      if(subStep == 2) { wizardDay--; if(wizardDay < 1) wizardDay = 31; }
+      if(subStep == 2) { wizardDay--;   if(wizardDay < 1) wizardDay = 31; }
       lcd.clear();
     }
-
     if(digitalRead(buttonSelect) == 1) {
       while(digitalRead(buttonSelect) == 1) {}
       subStep++;
       lcd.clear();
       
       if(subStep > 2) {
-        // Parse into uniform data array string string: YYYY-MM-DD
         char manualDateBuf[12];
         sprintf(manualDateBuf, "%04d-%02d-%02d", wizardYear, wizardMonth, wizardDay);
         
@@ -217,12 +267,12 @@ void runSetupWizard() {
         stats.end();
         
         savedMessageLCD();
-        wizardStep = 4; // Progress to finalization block
+        wizardStep = 6; // Progress to finalization block
       }
     }
   }
 
-  // ================= STAGE 4: FINALIZE SYSTEM =================
+  // ================= STAGE 6: FINALIZE SYSTEM =================
   stats.begin("fugu-stats", false);
   stats.putBool("isFirstBoot", false); // Close down the wizard state permanently
   stats.end();
@@ -249,25 +299,40 @@ void WifiReset(){
 }
 
 void factoryReset(){
-  EEPROM.write(0,1);  //STORE: Charging Algorithm (1 = MPPT Mode)
-  EEPROM.write(1,12); //STORE: Max Battery Voltage (whole)
-  EEPROM.write(2,0);  //STORE: Max Battery Voltage (decimal)
-  EEPROM.write(3,9);  //STORE: Min Battery Voltage (whole)
-  EEPROM.write(4,0);  //STORE: Min Battery Voltage (decimal) 
-  EEPROM.write(5,30); //STORE: Charging Current (whole)
-  EEPROM.write(6,0);  //STORE: Charging Current (decimal)
-  EEPROM.write(7,1);  //STORE: Fan Enable (Bool)
-  EEPROM.write(8,45); //STORE: Fan Temp (Integer)
-  EEPROM.write(9,90); //STORE: Shutdown Temp (Integer)
-  EEPROM.write(10,1); //STORE: Enable WiFi (Boolean)
-  EEPROM.write(11,1); //STORE: Enable autoload (on by default)
-  EEPROM.write(12,1); //STORE: Charger/PSU Mode Selection (1 = Charger Mode)
-  EEPROM.write(13,3); //STORE: LCD backlight sleep timer (default: 3 = Daytime On)
-  EEPROM.write(14,1); //STORE: Onboard Telemetry
+  // 1. Core Hardware & Feature Defaults (Preserving Angelo's original map)
+  EEPROM.write(0, 1);   // STORE: Charging Algorithm (1 = MPPT Mode)
+  // EEPROM 1, 2, 3, and 4 are deliberately left out here; they will be populated by applyBatteryPreset()
+  EEPROM.write(5, 30);  // STORE: Charging Current (whole)
+  EEPROM.write(6, 0);   // STORE: Charging Current (decimal)
+  EEPROM.write(7, 1);   // STORE: Fan Enable (Bool)
+  EEPROM.write(8, 50);  // STORE: Fan Temp (Integer)
+  EEPROM.write(9, 80);  // STORE: Shutdown Temp (Integer)
+  EEPROM.write(10, 1);  // STORE: Enable WiFi (Boolean)
+  EEPROM.write(11, 1);  // STORE: Enable autoload (on by default)
+  EEPROM.write(12, 1);  // STORE: Charger/PSU Mode Selection (1 = Charger Mode)
+  EEPROM.write(13, 3);  // STORE: LCD backlight sleep timer (default: 3 = Daytime On)
+  EEPROM.write(14, 1);  // STORE: Onboard Telemetry
+  EEPROM.write(15, 1);  // STORE: Enable Bluetooth
+  
+  // 2. Inject New Battery Architecture Defaults
+  // This function will automatically calculate 12V AGM limits and save them to 
+  // EEPROM addresses 1, 2, 3, 4, 21, and 22 via your updated saveSettings() function.
+  applyBatteryPreset(TYPE_AGM_SEALED, 12); 
+
+  // Commit all EEPROM changes to flash memory
   EEPROM.commit();
+
+  // 3. Clear Network and Lifetime Statistic Data
   stats.begin("fugu-stats", false);
   stats.clear(); 
+  
+  // 4. Force Setup Wizard on next boot
+  stats.putBool("isFirstBoot", true); 
+  stats.end(); // Always close Preferences when done
+
   WifiReset();
+
+  // 5. System Reboot UI
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print(" FACTORY RESET  ");
@@ -279,23 +344,23 @@ void factoryReset(){
 }
 
 void loadSettings(){ 
-  MPPT_Mode          = EEPROM.read(0);                       // Load saved charging mode setting
-  output_Mode        = EEPROM.read(12);                      // Load saved charging mode setting
-  voltageBatteryMax  = EEPROM.read(1)+(EEPROM.read(2)*.01);  // Load saved maximum battery voltage setting
-  voltageBatteryMin  = EEPROM.read(3)+(EEPROM.read(4)*.01);  // Load saved minimum battery voltage setting
-  currentCharging    = EEPROM.read(5)+(EEPROM.read(6)*.01);  // Load saved charging current setting
-  enableFan          = EEPROM.read(7);                       // Load saved fan enable settings
-  temperatureFan     = EEPROM.read(8);                       // Load saved fan temperature settings
-  temperatureMax     = EEPROM.read(9);                       // Load saved shutdown temperature settings
-  enableWiFi         = EEPROM.read(10);                      // Load saved WiFi enable settings  
-  flashMemLoad       = EEPROM.read(11);                      // Load saved flash memory autoload feature
-  backlightSleepMode = EEPROM.read(13);                      // Load saved lcd backlight sleep timer
-  serialTelemMode    = EEPROM.read(14);                      // Load saved Onboard telemetry settings
+  voltageBatteryMax   = EEPROM.read(1)  + (EEPROM.read(2)*.01);  // Load saved maximum battery voltage setting
+  voltageBatteryMin   = EEPROM.read(3)  + (EEPROM.read(4)*.01);  // Load saved minimum battery voltage setting
+  voltageBatteryFloat = EEPROM.read(21) + (EEPROM.read(22)*.01);
+  voltageLVD          = EEPROM.read(23) + (EEPROM.read(24)*0.01);
+  voltageLVR          = EEPROM.read(25) + (EEPROM.read(26)*0.01);
+  currentCharging     = EEPROM.read(5)  + (EEPROM.read(6)*.01);  // Load saved charging current setting
+  enableFan           = EEPROM.read(7);                          // Load saved fan enable settings
+  temperatureFan      = EEPROM.read(8);                          // Load saved fan temperature settings
+  temperatureMax      = EEPROM.read(9);                          // Load saved shutdown temperature settings
+  enableWiFi          = EEPROM.read(10);                         // Load saved WiFi enable settings  
+  flashMemLoad        = EEPROM.read(11);                         // Load saved flash memory autoload feature
+  backlightSleepMode  = EEPROM.read(13);                         // Load saved lcd backlight sleep timer
+  serialTelemMode     = EEPROM.read(14);                         // Load saved Onboard telemetry settings
+  enableBluetooth     = EEPROM.read(15);                         // Load saved Bluetooth enable setting
 }
 
 void saveSettings(){
-  EEPROM.write(0,MPPT_Mode);           //STORE: Algorithm 
-  EEPROM.write(12,output_Mode);        //STORE: Charge/PSU Mode Selection 
   conv1 = voltageBatteryMax*100;       //STORE: Maximum Battery Voltage (gets whole number)
   conv2 = conv1%100;                   //STORE: Maximum Battery Voltage (gets decimal number and converts to a whole number)
   EEPROM.write(1,voltageBatteryMax);
@@ -315,6 +380,13 @@ void saveSettings(){
 //EEPROM.write(11,flashMemLoad);       //STORE: Enable autoload (must be excluded from bulk save, uncomment under discretion)
   EEPROM.write(13,backlightSleepMode); //STORE: LCD backlight sleep timer 
   EEPROM.write(14,serialTelemMode);    //STORE: Onboard Telemetry setting 
+  EEPROM.write(15,enableBluetooth);
+  EEPROM.write(21, int(voltageBatteryFloat));
+  EEPROM.write(22, (voltageBatteryFloat - int(voltageBatteryFloat)) * 100);
+  EEPROM.write(23, int(voltageLVD));
+  EEPROM.write(24, (voltageLVD - int(voltageLVD)) * 100);
+  EEPROM.write(25, int(voltageLVR));
+  EEPROM.write(26, (voltageLVR - int(voltageLVR)) * 100);
   EEPROM.commit();                     //Saves setting changes to flash memory
 }
 void saveAutoloadSettings(){
@@ -326,4 +398,37 @@ void initializeFlashAutoload(){
     flashMemLoad = EEPROM.read(11);       //Load saved autoload (must be excluded from bulk save, uncomment under discretion) 
     if(flashMemLoad==1){loadSettings();}  //Load stored settings from flash memory  
   } 
+}
+
+void performOTAUpdate(String otaUrl) {
+    terminal.println("Starting OTA Update via Blynk.Air...");
+    terminal.flush();
+
+    WiFiClient client;
+    HTTPClient http;
+    
+    // Pass the dynamic URL given to us by Blynk
+    http.begin(otaUrl);
+    
+    int httpCode = http.GET();
+    if (httpCode == HTTP_CODE_OK) {
+        int contentLength = http.getSize();
+        if (Update.begin(contentLength)) {
+            Update.writeStream(http.getStream());
+            if (Update.end()) {
+                terminal.println("Update Success! Rebooting...");
+                terminal.flush();
+                delay(1000);
+                ESP.restart();
+            } else {
+                terminal.println("Update Failed!");
+                terminal.flush();
+            }
+        }
+    } else {
+        terminal.print("HTTP Error Code: ");
+        terminal.println(httpCode);
+        terminal.flush();
+    }
+    http.end();
 }
