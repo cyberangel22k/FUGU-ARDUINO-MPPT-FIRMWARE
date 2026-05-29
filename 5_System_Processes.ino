@@ -53,6 +53,7 @@ String getInternetDate() {
 }
 
 void setupWiFi(){
+  wifiInitializing = true;
   if(enableWiFi==1){
     Serial.begin(baudRate);
     Serial.println("Setting up WiFi access point...");
@@ -77,7 +78,8 @@ void setupWiFi(){
     }
     Blynk.config(BLYNK_AUTH_TOKEN, "blynk.cloud", 80);
     Blynk.connect();
-    }
+  }
+  wifiInitializing = false;
 }
 
 void runSetupWizard() {
