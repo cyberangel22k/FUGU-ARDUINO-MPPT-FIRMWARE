@@ -68,13 +68,11 @@ void setupWiFi(){
     else {
         Serial.println("Connected to WiFi");
         WIFI = 1;
-        lcd.setBacklight(HIGH);
         lcd.clear();
         lcd.setCursor(0,0);lcd.print("WiFi Connected  ");
         lcd.setCursor(0,1);lcd.print("IP: ");
         lcd.print(WiFi.localIP());
-        delay(3000);
-        menuPage = 0;
+        delay(2000);
     }
     Blynk.config(BLYNK_AUTH_TOKEN, "blynk.cloud", 80);
     Blynk.connect();
