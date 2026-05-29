@@ -1,3 +1,5 @@
+extern unsigned long prevLCDMillis;
+
 void buck_Enable(){                                                                  
   buckEnable = 1;
   digitalWrite(buck_EN,HIGH);
@@ -44,6 +46,7 @@ void Charging_Algorithm(){
       predictivePWM();
       PWM = PPWM; 
       lcd.clear();
+      prevLCDMillis = 0;
     }  
     else{            
       // ================= MPPT & MULTI-STAGE CHARGING ALGORITHM ================= //
