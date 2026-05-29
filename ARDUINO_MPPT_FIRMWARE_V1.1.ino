@@ -127,6 +127,7 @@ tailCurrentThresh       = 0.5000;      // USER PARAMETER - Current threshold to 
 bool
 isFirstBoot             = true,       //  CALIB PARAMETER - Needed to set the correct ADC chip
 otaUpdating             = false,
+wifiInitializing        = true,
 ADS1015_Mode            = 0;          //  CALIB PARAMETER - Use 1 for ADS1015 ADC model use 0 for ADS1115 ADC model
 int
 ADC_GainSelect          = 2,          //  CALIB PARAMETER - ADC Gain Selection (0→±6.144V 3mV/bit, 1→±4.096V 2mV/bit, 2→±2.048V 1mV/bit)
@@ -353,7 +354,7 @@ void setup() {
 }
 //================== CORE1: LOOP (DUAL CORE MODE) ======================//
 void loop() {
-  if (otaUpdating == true) {
+if (otaUpdating == true || wifiInitializing == true) { 
     delay(100);
     return;
   }
