@@ -95,3 +95,19 @@ Update May, 21, 2026
 * Rearranged boot sequence to avoid calling setupWiFI() at the twice on first boot.
 
 * added a vTaskDelay in coreTwo  to prevent watchdog from getting triggered.
+
+Update May 29, 2026
+
+*Added 3-Stage Charging Algorithm Upgrade: Fully integrated the Float Stage into the charging algorithm (Bulk -> Absorption -> Float).
+
+*Automated Battery Presets: Integrated a new Presets.h library to handle battery chemistries. The initial Setup Wizard now includes dedicated stages to select the Battery Type (LiFePO4, Li-Ion, AGM, Flooded, Custom) and System Voltage (12V, 24V, 48V), automatically calculating and saving the proper Max, Min, Float, LVD, and LVR parameters. You can still change these settings in the LCD settings menu manually.
+
+*Advanced Load Management (LVD/LVR): Added a new 9_Load.ino process to control a physical relay for house loads based on Low Voltage Disconnect and Reconnect thresholds. This includes a 30-second hardware debounce timer (lvdDelay) to prevent heavy inverter loads from triggering false disconnects during voltage sags. This is applicable to those who made custom PCVs.
+
+*Blynk.Air OTA Updates: Replaced the legacy manual HTTP update button with Blynk's native InternalPinOTA push architecture. The ESP32 now intercepts the cloud signal, safely halts the buck converter (buck_Disable()), freezes the main loop, and flashes the new firmware completely over-the-air from the Blynk Web Console. This feature is currently in testing phase. You may test it and report anything you encounter.
+
+*Offline Bluetooth Telemetry: Integrated native BluetoothSerial to broadcast real-time solar harvest data (Power, Voltage, Current, Temp) directly to mobile terminal apps for off-grid scenarios when Wi-Fi is unavailable. A dedicated toggle was added to the LCD settings menu to enable/disable the Bluetooth radio, with state memory saved to EEPROM slot 15.
+
+*UI/UX improvements.
+
+*WARNING: This update was tested to be stable for 3 days as of this writing. Test this with caution.
