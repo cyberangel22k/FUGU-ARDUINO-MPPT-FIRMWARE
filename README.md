@@ -110,4 +110,4 @@ Update May 29, 2026
 
 * UI/UX improvements.
 
-* WARNING: This update was tested to be stable for 3 days as of this writing. Test this with caution. To avoid getting compilation storage errors, go to Tools>Partition Scheme>Minimal SPIFFS (1.9MB APP with OTA).
+* WARNING: This update was tested to be stable for 3 days as of this writing. Test this with caution. To avoid getting compilation storage errors, go to Tools>Partition Scheme>Minimal SPIFFS (1.9MB APP with OTA). You will get garbled display sometimes. Just reboot the device until it fixes the LCD. I will find a way to fix this.
