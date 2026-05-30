@@ -20,10 +20,24 @@ void predictivePWM(){
 }   
 
 void PWM_Modulation(){
-  predictivePWM();                                                   // Computes for predictive pwm floor
-  PWM = constrain(PWM, PPWM, pwmMaxLimited);                         // Limit floor to PPWM and ceiling to maximum allowable duty cycle                                       
-  ledcWrite(pwmChannel, PWM);                                        // Set PWM duty cycle and write to GPIO
-  buck_Enable();                                                     // Turn on MPPT buck (IR2104)
+  predictivePWM();                                                   
+  
+  // DCM OVERSHOOT FIX:
+  // PPWM assumes heavy current (CCM). When the battery is full (Absorption/Float)
+  // or hitting a current limit, the buck enters Discontinuous Conduction Mode (DCM).
+  // If we force PPWM as a floor here, it acts as a brick wall, causing massive 
+  // voltage spikes because the duty cycle can't drop low enough to choke the power.
+  
+  if(chargingState == 0 && currentOutput < currentCharging && voltageOutput < voltageBatteryMax) {
+    // ACTIVE MPPT MODE: Safe to use PPWM floor for fast tracking
+    PWM = constrain(PWM, PPWM, pwmMaxLimited); 
+  } else {
+    // CONSTANT VOLTAGE/CURRENT MODE: Allow PWM to drop to 0 to prevent spikes
+    PWM = constrain(PWM, 0, pwmMaxLimited);    
+  }
+                                         
+  ledcWrite(pwmChannel, PWM);
+  buck_Enable(); 
 }
      
 void Charging_Algorithm(){
