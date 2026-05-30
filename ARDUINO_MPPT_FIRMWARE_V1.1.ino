@@ -296,7 +296,7 @@ void setup() {
     lcd.begin();
     lcd.setBacklight(HIGH);
     lcd.setCursor(0,0);
-    lcd.print("START: FUGU MPPT");
+    lcd.print("MPPT INITIALIZED");
     lcd.setCursor(0,1);
     lcd.print("FIRMWARE ");
     lcd.print(firmwareInfo);    
@@ -345,12 +345,6 @@ void setup() {
   
   //SETUP FINISHED
   Serial.println("> MPPT HAS INITIALIZED");                //Startup message
-  if (enableLCD == 1) {
-    lcd.setCursor(0,0); lcd.print("   FUGU MPPT    ");
-    lcd.setCursor(0,1); lcd.print("  INITIALIZED   ");   
-    delay(1500);
-    lcd.clear();
-  }
 }
 //================== CORE1: LOOP (DUAL CORE MODE) ======================//
 void loop() {
