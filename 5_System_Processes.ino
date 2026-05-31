@@ -406,11 +406,12 @@ void performOTAUpdate(String otaUrl) {
 
     WiFiClient client;
     HTTPClient http;
+    bool updateSuccessful = false; // Flag to track success
     
     // Pass the dynamic URL given to us by Blynk
     http.begin(otaUrl);
-    
     int httpCode = http.GET();
+    
     if (httpCode == HTTP_CODE_OK) {
         int contentLength = http.getSize();
         if (Update.begin(contentLength)) {
@@ -418,8 +419,7 @@ void performOTAUpdate(String otaUrl) {
             if (Update.end()) {
                 terminal.println("Update Success! Rebooting...");
                 terminal.flush();
-                delay(1000);
-                ESP.restart();
+                updateSuccessful = true; // Mark as successful, but don't reboot yet!
             } else {
                 terminal.println("Update Failed!");
                 terminal.flush();
@@ -430,5 +430,13 @@ void performOTAUpdate(String otaUrl) {
         terminal.println(httpCode);
         terminal.flush();
     }
-    http.end();
+    
+    // --- CLEAN UP THE STACK BEFORE REBOOTING ---
+    http.end(); // 1. Close the HTTP connection cleanly
+    
+    if (updateSuccessful) {
+        Blynk.disconnect();  // 2. Safely close the Blynk server socket
+        delay(1000);         // 3. Give the ESP32 a second to flush its memory buffers
+        ESP.restart();       // 4. Execute a clean reboot
+    }
 }
