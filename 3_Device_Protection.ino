@@ -26,4 +26,5 @@ void Device_Protection(){
   // CHARGER MODE SPECIFIC PROTECTION 
   if(voltageOutput < vInSystemMin)                             {BNC=1;ERR++;}              else{BNC=0;}  // BNC - BATTERY NOT CONNECTED 
   if(voltageInput < voltageOutput + voltageDropout)            {IUV=1;ERR++;REC=1;}        else{IUV=0;}  // IUV - INPUT UNDERVOLTAGE: Input below max battery charging voltage     
+  if(voltageInput < voltageOutput + voltageDropout + 3.0000)   {IUV=1;ERR++;REC=1;}        else{IUV=0;}  // IUV - When sleeping, force PV voltage to climb much higher (Battery + 1V dropout + 3V) to prove the sun is actually strong before waking up
 }
