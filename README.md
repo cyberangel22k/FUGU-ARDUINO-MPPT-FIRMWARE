@@ -117,3 +117,5 @@ Update May 30, 2026
 * Fixed LCD bugs
 
 * Fixed a bug in Float mode.
+
+* Fixed Blynk.OTA bug, device not rebooting or getting stuck during update.
