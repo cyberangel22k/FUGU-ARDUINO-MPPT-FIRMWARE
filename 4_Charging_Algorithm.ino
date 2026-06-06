@@ -21,13 +21,6 @@ void predictivePWM(){
 
 void PWM_Modulation(){
   predictivePWM();                                                   
-  
-  // DCM OVERSHOOT FIX:
-  // PPWM assumes heavy current (CCM). When the battery is full (Absorption/Float)
-  // or hitting a current limit, the buck enters Discontinuous Conduction Mode (DCM).
-  // If we force PPWM as a floor here, it acts as a brick wall, causing massive 
-  // voltage spikes because the duty cycle can't drop low enough to choke the power.
-  
   if(chargingState == 0 && currentOutput < currentCharging && voltageOutput < voltageBatteryMax) {
     // ACTIVE MPPT MODE: Safe to use PPWM floor for fast tracking
     PWM = constrain(PWM, PPWM, pwmMaxLimited); 
@@ -35,9 +28,21 @@ void PWM_Modulation(){
     // CONSTANT VOLTAGE/CURRENT MODE: Allow PWM to drop to 0 to prevent spikes
     PWM = constrain(PWM, 0, pwmMaxLimited);    
   }
-                                         
-  ledcWrite(pwmChannel, PWM);
-  buck_Enable(); 
+  // --- IR2104 GATE DRIVER SHOOT-THROUGH PROTECTION ---
+    if (PWM > 0 && PWM < 160) {
+    if (voltageOutput > voltageBatteryMax || (chargingState == 2 && voltageOutput > voltageBatteryFloat)) {
+       PWM = 0; 
+    } else {
+       PWM = 160; 
+    }
+  }
+  ledcWrite(buck_IN, PWM);
+  // Hardware-level safety: Cleanly disable the gate driver chip entirely if duty cycle is 0
+  if (PWM > 0) {
+    buck_Enable(); 
+  } else {
+    buck_Disable();
+  }
 }
      
 void Charging_Algorithm(){
@@ -48,9 +53,6 @@ void Charging_Algorithm(){
       chargingState = 0;                                             // Reset charging state back to BULK/MPPT upon recovery
       buck_Disable();
       
-      lcd.setBacklight(HIGH);
-      lcd.setCursor(0,0); lcd.print("POWER SOURCE    ");
-      lcd.setCursor(0,1); lcd.print("DETECTED        ");
       Serial.println("> Solar Panel Detected");
       Serial.print("> Computing For Predictive PWM ");
       for(int i = 0; i < 40; i++){ Serial.print("."); delay(30); }                        

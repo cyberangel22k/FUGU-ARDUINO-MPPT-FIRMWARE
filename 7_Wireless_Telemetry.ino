@@ -1,11 +1,11 @@
-#include "BluetoothSerial.h"
+//#include "BluetoothSerial.h"
 
-#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
-#endif
+//#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+//#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+//#endif
 
-BluetoothSerial SerialBT;
-bool btInitialized = false;
+//BluetoothSerial SerialBT;
+//bool btInitialized = false;
 
   ////////// WIFI TELEMETRY ////////// 
 BlynkTimer timer;
@@ -18,6 +18,12 @@ void Wireless_Telemetry(){
         if(isFirstConnect) {
            terminal.println(F("System Online."));
            terminal.println(F("Firmware Update Successful."));
+           terminal.println("====================");
+           terminal.println("DEVICE BOOTED");
+           terminal.printf("Firmware: %s\n", FIRMWARE_VERSION);
+           terminal.printf("Sketch Size: %u\n", ESP.getSketchSize());
+           terminal.printf("Free OTA Space: %u\n", ESP.getFreeSketchSpace());
+           terminal.println("====================");
            terminal.flush();
            isFirstConnect = false;
         }
@@ -25,7 +31,7 @@ void Wireless_Telemetry(){
       }
     static unsigned long lastBlynkUpdate = 0;
     if(millis() - lastBlynkUpdate > 1000){ // Only send data once per second
-      lastBlynkUpdate = millis();
+      lastBlynkUpdate = millis();}
     if(!Blynk.connected()){ Blynk.connect(); }
 
     int LED1, LED2, LED3, LED4;                      //Declare LED brightness variable 
@@ -58,27 +64,26 @@ void Wireless_Telemetry(){
   if(enableBluetooth==1){
     
     // Initialize the Bluetooth radio once
-    if(!btInitialized){
-        SerialBT.begin("FUGU_MPPT"); // This is the name you will see on your phone
-        btInitialized = true;
-    }
+    //if(!btInitialized){
+    //    SerialBT.begin("FUGU_MPPT"); // This is the name you will see on your phone
+    //    btInitialized = true;
+    //}
 
     // We use a timer so we don't spam the phone with thousands of messages a second
-    static unsigned long lastBtUpdate = 0;
-    if(millis() - lastBtUpdate > 1500){ 
-        lastBtUpdate = millis();
+    //static unsigned long lastBtUpdate = 0;
+    //if(millis() - lastBtUpdate > 1500){ 
+    //    lastBtUpdate = millis();
 
         // Format a clean, easy-to-read list for your mobile terminal
-        SerialBT.print("PV Power:       "); SerialBT.print(powerInput, 0); SerialBT.println(" W");
-        SerialBT.print("PV Voltage:     "); SerialBT.print(voltageInput, 1); SerialBT.println(" V");
-        SerialBT.print("Batt Voltage:   "); SerialBT.print(voltageOutput, 1); SerialBT.println(" V");
-        SerialBT.print("Charge Current: "); SerialBT.print(currentOutput, 2); SerialBT.println(" A");
-        SerialBT.print("Battery Level:  "); SerialBT.print(batteryPercent); SerialBT.println(" %");
-        SerialBT.print("System Temp:    "); SerialBT.print(temperature, 1); SerialBT.println(" C");
-        SerialBT.println("-----------------------------");
-    }
+    //    SerialBT.print("PV Power:       "); SerialBT.print(powerInput, 0); SerialBT.println(" W");
+    //    SerialBT.print("PV Voltage:     "); SerialBT.print(voltageInput, 1); SerialBT.println(" V");
+    //    SerialBT.print("Batt Voltage:   "); SerialBT.print(voltageOutput, 1); SerialBT.println(" V");
+    //    SerialBT.print("Charge Current: "); SerialBT.print(currentOutput, 2); SerialBT.println(" A");
+    //    SerialBT.print("Battery Level:  "); SerialBT.print(batteryPercent); SerialBT.println(" %");
+    //    SerialBT.print("System Temp:    "); SerialBT.print(temperature, 1); SerialBT.println(" C");
+    //    SerialBT.println("-----------------------------");
+    //}
   }
- }
 }
 
 BLYNK_WRITE(InternalPinOTA) {
@@ -89,6 +94,7 @@ BLYNK_WRITE(InternalPinOTA) {
     buck_Disable();           // Turn off the solar charger for safety
 
     // 2. DRAW FINAL LOADING SCREEN
+    lcd.setBacklight(HIGH);
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("UPDATING FIRMWARE");

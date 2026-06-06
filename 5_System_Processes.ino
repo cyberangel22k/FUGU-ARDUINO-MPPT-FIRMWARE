@@ -1,15 +1,45 @@
 void System_Processes(){
   ///////////////// FAN COOLING /////////////////
-  if(enableFan==true){
-    if(enableDynamicCooling==false){                                   //STATIC PWM COOLING MODE (2-PIN FAN - no need for hysteresis, temp data only refreshes after 'avgCountTS' or every 500 loop cycles)                       
-      if(overrideFan==true){fanStatus=true;}                           //Force on fan
-      else if(temperature>=temperatureFan){fanStatus=1;}               //Turn on fan when set fan temp reached
-      else if(temperature<temperatureFan){fanStatus=0;}                //Turn off fan when set fan temp reached
-      digitalWrite(FAN,fanStatus);                                     //Send a digital signal to the fan MOSFET
+  if (enableFan == 1) {
+    // 1. FORCED ON MODE
+    if (overrideFan == 1) {
+      ledcWrite(FAN, 255); // Full power
+      fanStatus = 1;
+    } 
+    // 2. DYNAMIC PWM MODE
+    else if (enableDynamicCooling == 1) {
+      if (temperature < temperatureFan) {
+        ledcWrite(FAN, 0); // Off
+        fanStatus = 0;
+      } 
+      // SAFETY FALLBACK: If temp is critically high, ignore PWM and run full speed
+      else if (temperature >= temperatureMax) {
+        ledcWrite(FAN, 255); 
+        fanStatus = 1;
+      }
+      else {
+        // Map speed: 100 is min (prevents stalling), 255 is max
+        int pwmSpeed = map(temperature, temperatureFan, temperatureMax, 100, 255);
+        pwmSpeed = constrain(pwmSpeed, 100, 255);
+        ledcWrite(FAN, pwmSpeed);
+        fanStatus = 1;
+      }
     }
-    else{}                                                             //DYNAMIC PWM COOLING MODE (3-PIN FAN - coming soon)
+    // 3. STATIC ON/OFF MODE (Fallback if neither override nor PWM flags are set)
+    else {
+      if (temperature >= temperatureFan) {
+        ledcWrite(FAN, 255); // Full power
+        fanStatus = 1;
+      } else {
+        ledcWrite(FAN, 0);   // Off
+        fanStatus = 0;
+      }
+    }
+  } else {
+    // Fan disabled globally in settings
+    ledcWrite(FAN, 0);
+    fanStatus = 0;
   }
-  else{digitalWrite(FAN,LOW);}                                         //Fan Disabled
   
   //////////// LOOP TIME STOPWATCH ////////////
   loopTimeStart = micros();                                            //Record Start Time
@@ -52,13 +82,26 @@ String getInternetDate() {
   return String(dateBuffer);
 }
 
-void setupWiFi(){
-  wifiInitializing = true;
+void saveConfigCallback () {
+  shouldSaveConfig = true;
+}
+
+void setupWiFi(bool showLCD){
   if(enableWiFi==1){
     Serial.begin(baudRate);
     Serial.println("Setting up WiFi access point...");
     WiFiManager wm;
-    wm.setConfigPortalTimeout(120);         // If no WiFi after 120s, give up and start charging
+    wm.setConfigPortalTimeout(120); // If no WiFi after 120s, give up and start charging
+
+    // Set config save notify callback
+    wm.setSaveConfigCallback(saveConfigCallback);
+
+    // Create custom parameters for the captive portal
+    WiFiManagerParameter custom_blynk_auth("auth", "Auth Token", blynk_auth, 40);
+
+    // Add parameters to WiFiManager
+    wm.addParameter(&custom_blynk_auth);
+
     bool res;
     res = wm.autoConnect("FUGU DIY MPPT"); // FUGU DIY MPPT Access point name
     if(!res) {
@@ -66,18 +109,34 @@ void setupWiFi(){
       WIFI = 0;
     }
     else {
-        Serial.println("Connected to WiFi");
-        WIFI = 1;
+      Serial.println("Connected to WiFi");
+      WIFI = 1;
+
+      // Read updated parameters from the portal
+      strcpy(blynk_auth, custom_blynk_auth.getValue());
+
+      // Save the custom parameters to Preferences ONLY if they were changed in the portal
+      if (shouldSaveConfig) {
+        stats.begin("fugu-stats", false); // Open in read/write mode
+        stats.putString("bAuth", String(blynk_auth));
+        stats.end();
+        Serial.println("> SYSTEM: Saved new Blynk credentials to flash");
+        shouldSaveConfig = false;
+      }
+
+      if (showLCD == true){
         lcd.setCursor(0,0);lcd.print("WiFi Connected  ");
         lcd.setCursor(0,1);lcd.print("IP: ");
         lcd.print(WiFi.localIP());
-        delay(2000);
+        delay(1500);
         lcd.clear();
+      }
     }
-    Blynk.config(BLYNK_AUTH_TOKEN, "blynk.cloud", 80);
+    
+    // Inject the dynamic Auth Token into Blynk
+    Blynk.config(blynk_auth, "blynk.cloud", 80);
     Blynk.connect();
   }
-  wifiInitializing = false;
 }
 
 void runSetupWizard() {
@@ -198,8 +257,8 @@ void runSetupWizard() {
       if(useWiFiSelection && enableWiFi == 1) {
         lcd.setCursor(0, 0); lcd.print("CONNECT TO WIFI ");
         lcd.setCursor(0, 1); lcd.print("USE PHONE APP...");
-        delay(10000);
-        setupWiFi();
+        delay(3000);
+        setupWiFi(true);
         if (WIFI == 1) {
           String netDate = getInternetDate();
           stats.begin("fugu-stats", false);
@@ -284,8 +343,7 @@ void runSetupWizard() {
   
   ESP.restart();
 }
-
-void WifiReset(){
+void resetWiFi(){
   lcd.clear();
   lcd.setCursor(0,0); lcd.print("Resetting WiFi...");
   lcd.setCursor(0,1); lcd.print("Please wait...");
@@ -297,7 +355,16 @@ void WifiReset(){
   delay(1000);
   ESP.restart();
 }
-
+void resetBlynk() {
+  Serial.println("Resetting Blynk Credentials...");
+  stats.begin("fugu-stats", false);
+  stats.remove("bAuth");
+  stats.end();
+  
+  Serial.println("Blynk cleared. Rebooting...");
+  delay(1000);
+  ESP.restart(); 
+}
 void factoryReset(){
   // 1. Core Hardware & Feature Defaults (Preserving Angelo's original map)
   EEPROM.write(0, 1);   // STORE: Charging Algorithm (1 = MPPT Mode)
@@ -330,7 +397,8 @@ void factoryReset(){
   stats.putBool("isFirstBoot", true); 
   stats.end(); // Always close Preferences when done
 
-  WifiReset();
+  resetWiFi();
+  resetBlynk();
 
   // 5. System Reboot UI
   lcd.clear();
@@ -399,44 +467,107 @@ void initializeFlashAutoload(){
     if(flashMemLoad==1){loadSettings();}  //Load stored settings from flash memory  
   } 
 }
-
-void performOTAUpdate(String otaUrl) {
-    terminal.println("Starting OTA Update via Blynk.Air...");
+void performOTAUpdate(String otaUrl)
+{
+    terminal.println("=================================");
+    terminal.println("Starting OTA Update via Blynk.Air");
+    terminal.println("=================================");
     terminal.flush();
 
-    WiFiClient client;
     HTTPClient http;
-    bool updateSuccessful = false; // Flag to track success
-    
-    // Pass the dynamic URL given to us by Blynk
+    bool updateSuccessful = false;
+
     http.begin(otaUrl);
+
     int httpCode = http.GET();
-    
-    if (httpCode == HTTP_CODE_OK) {
-        int contentLength = http.getSize();
-        if (Update.begin(contentLength)) {
-            Update.writeStream(http.getStream());
-            if (Update.end()) {
-                terminal.println("Update Success! Rebooting...");
-                terminal.flush();
-                updateSuccessful = true; // Mark as successful, but don't reboot yet!
-            } else {
-                terminal.println("Update Failed!");
-                terminal.flush();
-            }
-        }
-    } else {
-        terminal.print("HTTP Error Code: ");
-        terminal.println(httpCode);
+
+    if (httpCode != HTTP_CODE_OK)
+    {
+        terminal.printf("HTTP Error: %d\n", httpCode);
         terminal.flush();
+        http.end();
+        return;
     }
-    
-    // --- CLEAN UP THE STACK BEFORE REBOOTING ---
-    http.end(); // 1. Close the HTTP connection cleanly
-    
-    if (updateSuccessful) {
-        Blynk.disconnect();  // 2. Safely close the Blynk server socket
-        delay(1000);         // 3. Give the ESP32 a second to flush its memory buffers
-        ESP.restart();       // 4. Execute a clean reboot
+
+    int contentLength = http.getSize();
+
+    terminal.printf("Content Length: %d bytes\n", contentLength);
+    terminal.printf("Current Sketch Size: %u bytes\n", ESP.getSketchSize());
+    terminal.printf("Free OTA Space: %u bytes\n", ESP.getFreeSketchSpace());
+    terminal.flush();
+
+    if (contentLength <= 0)
+    {
+        terminal.println("ERROR: Invalid content length!");
+        terminal.flush();
+        http.end();
+        return;
+    }
+
+    if (!Update.begin(contentLength))
+    {
+        terminal.println("ERROR: Update.begin() failed!");
+        terminal.printf("Reason: %s\n", Update.errorString());
+        terminal.flush();
+        http.end();
+        return;
+    }
+
+    terminal.println("Writing firmware...");
+    terminal.flush();
+
+    size_t written = Update.writeStream(http.getStream());
+
+    terminal.printf("Bytes Written: %u\n", written);
+    terminal.printf("Bytes Expected: %d\n", contentLength);
+    terminal.flush();
+
+    if (written != (size_t)contentLength)
+    {
+        terminal.println("ERROR: Incomplete firmware download!");
+        terminal.printf("Update Error: %s\n", Update.errorString());
+        terminal.flush();
+
+        Update.abort();
+        http.end();
+        return;
+    }
+
+    terminal.println("Finalizing update...");
+    terminal.flush();
+
+    if (!Update.end(true))
+    {
+        terminal.println("ERROR: Firmware validation failed!");
+        terminal.printf("Reason: %s\n", Update.errorString());
+        terminal.flush();
+
+        http.end();
+        return;
+    }
+
+    terminal.println("Firmware written successfully.");
+    terminal.println("OTA verification PASSED.");
+    terminal.flush();
+
+    updateSuccessful = true;
+
+    http.end();
+
+    if (updateSuccessful)
+    {
+        terminal.println("Disconnecting Blynk...");
+        terminal.flush();
+
+        Blynk.disconnect();
+
+        delay(1000);
+
+        terminal.println("Rebooting...");
+        terminal.flush();
+
+        delay(500);
+
+        ESP.restart();
     }
 }

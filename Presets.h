@@ -59,3 +59,4 @@ inline void applyBatteryPreset(int type, int systemVoltage) {
     }
 }
 #endif
+
