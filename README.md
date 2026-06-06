@@ -20,10 +20,11 @@ Starting May 9, 2026 update, this firmware now requires LCD and buttons to setup
 ## Usage
 Assuming you have already built the FUGU MPPT Solar Charge Controller using AngeloCasi's guide, here are the steps flashing this firmware version:
 1. Make sure you have the latest ESP32 Board Manager installed together with other libraries listed above in your Arduino IDE.
-2. Edit Blynk template ID and template name according to your Blynk console. Flash the firmware to the device.
+2. Edit Blynk template ID and template name according to your Blynk console. Go and select Tools>Partition Scheme>Minimal SPIFFS (1.9MB APP with OTA). Flash the firmware to the device.
 3. Connect the device to your batteries and solar panels.
 4. On first boot, select the module you are using (ADS1015 or ADS1115). Then select battery chemistry and voltage, otherwise, use custom and input the correct values. Then select connect to WiFI.
-5. Using a phone or Laptop, connect WiFi access point named "FUGU DIY MPPT". Once connected, you will be redirected to a captive portal page to setup WiFi connection and Blynk credentials. Select your WiFi access point and input your WiFi password and Blynk Auth and save. You will be disconnected automatically once it connects. The LCD should also prompt that WiFi is connected and will reboot automatically. In case you change the WiFi SSID or password of your router, you can reset your credentials in the settings menu or perform a factory reset. You will be required to set everything back again if you chose to perform factory reset. 
+5. Using a phone or Laptop, connect WiFi access point named "FUGU DIY MPPT". Once connected, you will be redirected to a captive portal page to setup WiFi connection and Blynk credentials. Select your WiFi access point and input your WiFi password and Blynk Auth and save. You will be disconnected automatically once it connects. The LCD should also prompt that WiFi is connected and will reboot automatically. In case you change the WiFi SSID or password of your router, you can reset your credentials in the settings menu or perform a factory reset. You will be required to set everything back again if you chose to perform factory reset.
+6. If you have updates to your firmware, you can just use Blynk.Air so you don't have to connect it via USB.
 ## Changelog:
 
 Initial release Oct. 22, 2022
