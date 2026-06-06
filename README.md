@@ -125,6 +125,8 @@ Update June 6, 2026
 
 * Migrated to ESP32 Arduino Core 3.0.0+ API: Refactored all PWM hardware control to use the new pin-centric ledc API. *Note: Ensure you have the latest ESP32 Board Manager installed (Version 3.0.0 or higher recommended).*
 
+* Added Sunset Chatter Timer: Added a 60s timer during sunrise and sunset where the buck turns on and off rapidly because there is not enough sunlight.
+  
 * Implemented 4-Mode Cooling Logic. Added a PWM-based cooling system.
  1. Mode 0 (OFF): Disables the cooling fan.
  2. Mode 1 (FORCED ON): Sets the fan to 100% duty cycle.
