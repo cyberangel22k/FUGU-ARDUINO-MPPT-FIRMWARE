@@ -111,7 +111,7 @@ Update May 29, 2026
 
 * UI/UX improvements.
 
-* Note: The PSU Mode was intentionaly stripeed in this update for safety. To avoid getting compilation storage errors, go to Tools>Partition Scheme>Minimal SPIFFS (1.9MB APP with OTA).
+* Note: The PSU Mode was intentionaly stripped in this update for safety. To avoid getting compilation storage errors, go to Tools>Partition Scheme>Minimal SPIFFS (1.9MB APP with OTA).
 
 Update May 30, 2026
 
