@@ -1,20 +1,23 @@
-#define BLYNK_TEMPLATE_ID "Copy-from-Blynk-console"
-#define BLYNK_TEMPLATE_NAME "Copy-from-Blynk-console"
-#define BLYNK_AUTH_TOKEN "Copy-from-Blynk-console"
-#define FIRMWARE_VERSION "1.1.3"
-#define BLYNK_FIRMWARE_VERSION "1.1.2"
+#define BLYNK_TEMPLATE_ID "TMPL3EnLIFxE"
+#define BLYNK_TEMPLATE_NAME "Fugu MPPT"
+#define FIRMWARE_VERSION "2.0-beta"            //8 characters
+#define BLYNK_FIRMWARE_VERSION "2.0-beta"      //8 characters
+char
+blynk_auth[40]      = "your_blynk_auth";
+bool
+shouldSaveConfig    = false;
 
 //================================ MPPT FIRMWARE LCD MENU INFO =====================================//
 // The lines below are for the Firmware Version info displayed on the MPPT's LCD Menu Interface     //
 //==================================================================================================//
 String 
-firmwareInfo      = "V1.101  ",
-firmwareDate      = "17/10/24",
+firmwareInfo      = FIRMWARE_VERSION,
+firmwareDate      = "06/06/26",
 firmwareContactR1 = "www.youtube.com/",  
 firmwareContactR2 = "TechBuilder     ",
-startDate         = "2025-01-01";
+startDate         = "2026-01-01";
 int
-wizardYear        = 2025,
+wizardYear        = 2026,
 wizardMonth       = 1,
 wizardDay         = 1;
 
@@ -48,18 +51,21 @@ WidgetTerminal terminal(V0);
 // been set or saved through the LCD menu interface or mobile phone WiFi app. Some parameters here  //
 // would allow you to override or unlock features for advanced users (settings not on the LCD menu) //
 //==================================================================================================//
-#define backflow_MOSFET 27          
-#define buck_IN         33          
-#define buck_EN         32          
-#define LED             2           
-#define FAN             16          
+#define backflow_MOSFET 27          //SYSTEM PARAMETER - Backflow MOSFET
+#define buck_IN         33          //SYSTEM PARAMETER - Buck MOSFET Driver PWM Pin
+#define buck_EN         32          //SYSTEM PARAMETER - Buck MOSFET Driver Enable Pin
+#define LED             2           //SYSTEM PARAMETER - LED Indicator GPIO Pin
+#define FAN             16          //SYSTEM PARAMETER - Fan GPIO Pin
 #define ADC_ALERT       34
-#define TempSensor      35          
-#define Load            12          // dummy pin for Load/LVD logic, Use this pin if you want to implement the Load/LVD feature
-#define buttonLeft      18          
-#define buttonRight     17          
-#define buttonBack      19          
-#define buttonSelect    23
+#define TempSensor      35          //SYSTEM PARAMETER - Temperature Sensor GPIO Pin
+#define Load            12
+#define buttonLeft      18          //SYSTEM PARAMETER - 
+#define buttonRight     17          //SYSTEM PARAMETER -
+#define buttonBack      19          //SYSTEM PARAMETER - 
+#define buttonSelect    23          //SYSTEM PARAMETER -
+#define FAN_PWM_CHANNEL 1           //SYSTEM PARAMETER - Dedicated ledc channel for the fan
+#define FAN_FREQ        5000        //SYSTEM PARAMETER - 5kHz PWM Frequency
+#define FAN_RESOLUTION  8           //SYSTEM PARAMETER - 8-bit resolution (0-255 scaling)
 #define BLYNK_PRINT Serial
 
 //====================================== USER PARAMETERS ==========================================//
@@ -95,6 +101,10 @@ millisLCDInterval       = 1000,        //  USER PARAMETER - Time Interval Refres
 millisWiFiInterval      = 2000,        //  USER PARAMETER - Time Interval Refresh Rate For WiFi Telemetry (ms)
 millisLCDBackLInterval  = 2000,        //  USER PARAMETER - Time Interval Refresh Rate For WiFi Telemetry (ms)
 backlightSleepMode      = 0,           //  USER PARAMETER - 0 = Never, 1 = 10secs, 2 = 5mins, 3 = 1hr, 4 = 6 hrs, 5 = 12hrs, 6 = 1 day, 7 = 3 days, 8 = 1wk, 9 = 1month
+battPreset              = 4,           //  USER PARAMETER - 0=LiFePO4, 1=Li-Ion, 2=AGM, 3=Flooded, 4=Custom
+sysVoltage              = 12,          //  USER PARAMETER - 12, 24, or 48
+loadMode                = 0,           //  USER PARAMETER - 0: Auto (LVD/LVR), 1: Manual
+manualLoadState         = 0,           //  USER PARAMETER - 0: OFF, 1: ON
 baudRate                = 500000;      //  USER PARAMETER - USB Serial Baud Rate (bps)
 
 float 
@@ -127,7 +137,6 @@ tailCurrentThresh       = 0.5000;      // USER PARAMETER - Current threshold to 
 bool
 isFirstBoot             = true,       //  CALIB PARAMETER - Needed to set the correct ADC chip
 otaUpdating             = false,
-wifiInitializing        = true,
 ADS1015_Mode            = 0;          //  CALIB PARAMETER - Use 1 for ADS1015 ADC model use 0 for ADS1115 ADC model
 int
 ADC_GainSelect          = 2,          //  CALIB PARAMETER - ADC Gain Selection (0→±6.144V 3mV/bit, 1→±4.096V 2mV/bit, 2→±2.048V 1mV/bit)
@@ -265,7 +274,7 @@ lvdTimerStart         = 0;           //SYSTEM PARAMETER - Tracks how long voltag
 
 //================= CORE0: SETUP (DUAL CORE MODE) =====================//
 void coreTwo(void * pvParameters){
- setupWiFi();                                              //TAB#7 - WiFi Initialization
+ setupWiFi(false);                                              //TAB#7 - WiFi Initialization
 //================= CORE0: LOOP (DUAL CORE MODE) ======================//
   while(1){
     Wireless_Telemetry();                                   //TAB#7 - Wireless telemetry (WiFi & Bluetooth)
@@ -283,13 +292,13 @@ void setup() {
   pinMode(backflow_MOSFET,OUTPUT);                          
   pinMode(buck_EN,OUTPUT);
   pinMode(LED,OUTPUT); 
-  pinMode(FAN,OUTPUT);
   pinMode(TS,INPUT);
   pinMode(Load, OUTPUT);
   pinMode(buttonLeft,INPUT); 
   pinMode(buttonRight,INPUT); 
   pinMode(buttonBack,INPUT); 
-  pinMode(buttonSelect,INPUT); 
+  pinMode(buttonSelect,INPUT);
+   
   
   //LCD INITIALIZATION
   if(enableLCD==1){
@@ -309,6 +318,8 @@ void setup() {
   bool isFirstBoot = stats.getBool("isFirstBoot", true);
   startDate = stats.getString("startDate", "2025-01-01");
   ADS1015_Mode = stats.getBool("is1015", 0);
+  String bAuth = stats.getString("bAuth", "dummy_auth");
+  strcpy(blynk_auth, bAuth.c_str());
   stats.end();
   EEPROM.begin(512);
 
@@ -327,12 +338,15 @@ void setup() {
   Serial.println("> FLASH MEMORY: SAVED DATA LOADED");    //Startup message 
 
   //PWM INITIALIZATION
-  ledcSetup(pwmChannel,pwmFrequency,pwmResolution);          //Set PWM Parameters
-  ledcAttachPin(buck_IN, pwmChannel);                        //Set pin as PWM
-  ledcWrite(pwmChannel,PWM);                                 //Write PWM value at startup (duty = 0)
+  ledcAttach(buck_IN, pwmFrequency, pwmResolution);
+  ledcWrite(buck_IN, PWM);                                   // Write PWM value at startup (duty = 0)
   pwmMax = pow(2,pwmResolution)-1;                           //Get PWM Max Bit Ceiling
   pwmMaxLimited = (PWM_MaxDC*pwmMax)/100.000;                //Get maximum PWM Duty Cycle (pwm limiting protection)
   
+  //FAN PWM INITIALIZATION
+  ledcAttach(FAN, FAN_FREQ, FAN_RESOLUTION);
+  ledcWrite(FAN, 0);                                         // Start with fan completely OFF
+
   //ADC INITIALIZATION
   ADC_SetGain();                                             //Sets ADC Gain & Range
   ads.begin();                                               //Initialize ADC
@@ -346,11 +360,13 @@ void setup() {
   //SETUP FINISHED
   Serial.println("> MPPT HAS INITIALIZED");                //Startup message
 }
+
 //================== CORE1: LOOP (DUAL CORE MODE) ======================//
 void loop() {
-if (otaUpdating == true || wifiInitializing == true) { 
-    delay(100);
-    return;
+  // CRITICAL OTA GUARD: Freezes the MPPT tracker while flashing firmware
+  if (otaUpdating == true) { 
+      delay(10);
+      return;
   }
   Read_Sensors();         //TAB#2 - Sensor data measurement and computation
   Device_Protection();    //TAB#3 - Fault detection algorithm  
