@@ -127,7 +127,7 @@ Update June 6, 2026
 
 * Added Sunset Chatter Timer: Added a 60s timer during sunrise and sunset where the buck turns on and off rapidly because there is not enough sunlight.
   
-* Implemented 4-Mode Cooling Logic. Added a PWM-based cooling system. (3PIN Fan setup required: PWM, 12v, GND)
+* Implemented 4-Mode Cooling Logic. Added a PWM-based cooling system. (3PIN Fan setup required: PWM, 12v, GND. For 2PIN fan setup, use STATIC MODE.)
  1. Mode 0 (OFF): Disables the cooling fan.
  2. Mode 1 (FORCED ON): Sets the fan to 100% duty cycle.
  3. Mode 2 (DYNAMIC PWM): Modulates fan speed based on system temperature using map() and constrain() functions for quiet, efficient cooling.
