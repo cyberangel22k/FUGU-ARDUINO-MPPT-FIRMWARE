@@ -8,11 +8,43 @@
 //bool btInitialized = false;
 
   ////////// WIFI TELEMETRY ////////// 
-BlynkTimer timer;
 extern bool otaUpdating;
+
+void pushBlynkData() {
+  // Only push data if WiFi is enabled AND we are actively connected to the server
+  if(enableWiFi == 1 && Blynk.connected()) {
+    
+    int LED1, LED2, LED3, LED4;                      
+    if(buckEnable==1)      {LED1=200;}else{LED1=0;}  
+    if(batteryPercent>=99 ){LED2=200;}else{LED2=0;}  
+    if(loadStatus==1)       {LED3=200;}else{LED3=0;} 
+    if(fanStatus==1)        {LED4=200;}else{LED4=0;} 
+
+    Blynk.virtualWrite(V1, powerInput); 
+    Blynk.virtualWrite(V2, batteryPercent);
+    Blynk.virtualWrite(V3, voltageInput);    
+    Blynk.virtualWrite(V4, currentInput);   
+    Blynk.virtualWrite(V5, voltageOutput); 
+    Blynk.virtualWrite(V6, currentOutput); 
+    Blynk.virtualWrite(V7, temperature); 
+    Blynk.virtualWrite(V8, Wh/1000); 
+    Blynk.virtualWrite(V9, energySavings);       
+    Blynk.virtualWrite(V10, LED1);               
+    Blynk.virtualWrite(V11, LED2);               
+    Blynk.virtualWrite(V12, LED3);               
+    Blynk.virtualWrite(V13, LED4);               
+    Blynk.virtualWrite(V14, voltageBatteryMin);  
+    Blynk.virtualWrite(V15, voltageBatteryMax);  
+    Blynk.virtualWrite(V16, currentCharging);    
+    Blynk.virtualWrite(V17, electricalPrice);    
+    Blynk.virtualWrite(V18, daysRunning); 
+  }
+}
 
 void Wireless_Telemetry(){
   if(enableWiFi==1){
+    Blynk.run();
+    blynkTimer.run();
     if(Blynk.connected()){
       static bool isFirstConnect = true;
       if(isFirstConnect) {
@@ -27,42 +59,33 @@ void Wireless_Telemetry(){
          terminal.flush();
          isFirstConnect = false;
       }
-      Blynk.run();
-    }
-    
-    static unsigned long lastBlynkUpdate = 0;
-    if(millis() - lastBlynkUpdate > 1000){ // Only send data once per second
-      lastBlynkUpdate = millis();
-      
-      if(!Blynk.connected()){ Blynk.connect(); }
-
-      int LED1, LED2, LED3, LED4;                      //Declare LED brightness variable 
-      if(buckEnable==1)      {LED1=200;}else{LED1=0;}  //BATTERY CHARGING STATUS
-      if(batteryPercent>=99 ){LED2=200;}else{LED2=0;}  //FULL CHARGE STATUS
-      if(loadStatus==1)       {LED3=200;}else{LED3=0;}  //LOAD/LDV STATUS
-      if(fanStatus==1)        {LED4=200;}else{LED4=0;}  //FAN STATUS
-
-      Blynk.virtualWrite(V1, powerInput); 
-      Blynk.virtualWrite(V2, batteryPercent);
-      Blynk.virtualWrite(V3, voltageInput);    
-      Blynk.virtualWrite(V4, currentInput);   
-      Blynk.virtualWrite(V5, voltageOutput); 
-      Blynk.virtualWrite(V6, currentOutput); 
-      Blynk.virtualWrite(V7, temperature); 
-      Blynk.virtualWrite(V8, Wh/1000); 
-      Blynk.virtualWrite(V9, energySavings);       
-      Blynk.virtualWrite(V10, LED1);               //LED - Battery Charging Status
-      Blynk.virtualWrite(V11, LED2);               //LED - Full Battery Charge Status
-      Blynk.virtualWrite(V12, LED3);               //LED - LOAD/LDV STATUS
-      Blynk.virtualWrite(V13, LED4);               //LED - FAN STATUS
-      Blynk.virtualWrite(V14, voltageBatteryMin);  //Minimum Battery Voltage (Read & Write)
-      Blynk.virtualWrite(V15, voltageBatteryMax);  //Maximum Battery Voltage (Read & Write)
-      Blynk.virtualWrite(V16, currentCharging);    //Charging Current  (Read & Write)
-      Blynk.virtualWrite(V17, electricalPrice);    //Electrical Price  (Write)
-      Blynk.virtualWrite(V18, daysRunning);        //Send number of days running to App
     }
   }
+  ////////// BLUETOOTH TELEMETRY ////////// 
+  if(enableBluetooth==1){
+    
+    // Initialize the Bluetooth radio once
+    //if(!btInitialized){
+    //    SerialBT.begin("FUGU_MPPT"); // This is the name you will see on your phone
+    //    btInitialized = true;
+    //}
 
+    // We use a timer so we don't spam the phone with thousands of messages a second
+    //static unsigned long lastBtUpdate = 0;
+    //if(millis() - lastBtUpdate > 1500){ 
+    //    lastBtUpdate = millis();
+
+        // Format a clean, easy-to-read list for your mobile terminal
+    //    SerialBT.print("PV Power:       "); SerialBT.print(powerInput, 0); SerialBT.println(" W");
+    //    SerialBT.print("PV Voltage:     "); SerialBT.print(voltageInput, 1); SerialBT.println(" V");
+    //    SerialBT.print("Batt Voltage:   "); SerialBT.print(voltageOutput, 1); SerialBT.println(" V");
+    //    SerialBT.print("Charge Current: "); SerialBT.print(currentOutput, 2); SerialBT.println(" A");
+    //    SerialBT.print("Battery Level:  "); SerialBT.print(batteryPercent); SerialBT.println(" %");
+    //    SerialBT.print("System Temp:    "); SerialBT.print(temperature, 1); SerialBT.println(" C");
+    //    SerialBT.println("-----------------------------");
+    //}
+  }
+}
 
 BLYNK_WRITE(InternalPinOTA) {
     String otaUrl = param.asString();

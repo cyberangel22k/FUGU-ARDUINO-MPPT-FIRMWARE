@@ -138,3 +138,17 @@ Update June 6, 2026
 * UI/UX & Menu Updates. Reorganized the settings menu. Integrated new features to the menu such as: battery and voltage selection, charging control, load control, new fan modes, etc.
 
 * Fixed remaining UI bugs encountered in the previous builds.
+
+Update June 12, 2026 (Happy Indepence Day Philippines!!!)
+
+* Lithium Float Logic: Modified the charging state machine to automatically skip the Float charging stage when Lithium battery chemistries (e.g., LiFePO4, Li-ion) are selected. This prevents chronic micro-cycling at high voltages and protects the cells from degradation.
+
+* Non-Volatile Storage Migration: Completely transitioned the memory architecture from legacy EEPROM byte addressing to the native ESP32 Preferences.h library.
+
+* NVS Namespace Implementation: Established dedicated namespaces (fugu-cfg for system settings and fugu-stats for network/lifetime data) to ensure safer and more structured flash memory management.
+
+* Factory Reset Overhaul: Patched a critical logic bug where volatile, fragmented RAM variables would overwrite clean flash memory during a reset. The system now properly enforces safe baseline defaults to RAM prior to executing the NVS save state.
+
+* Menu Execution Cleanup: Removed redundant execution strings and dead code from the LCD factory reset confirmation submenu to prevent system hang-ups and overlapping reboot commands.
+
+* Action Required: A factory reset is strictly required immediately after flashing this build to wipe out legacy EEPROM fragmentation and initialize the new key-value structure.

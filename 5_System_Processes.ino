@@ -366,41 +366,46 @@ void resetBlynk() {
   ESP.restart(); 
 }
 void factoryReset(){
-  // 1. Core Hardware & Feature Defaults (Preserving Angelo's original map)
-  EEPROM.write(0, 1);   // STORE: Charging Algorithm (1 = MPPT Mode)
-  // EEPROM 1, 2, 3, and 4 are deliberately left out here; they will be populated by applyBatteryPreset()
-  EEPROM.write(5, 30);  // STORE: Charging Current (whole)
-  EEPROM.write(6, 0);   // STORE: Charging Current (decimal)
-  EEPROM.write(7, 1);   // STORE: Fan Enable (Bool)
-  EEPROM.write(8, 50);  // STORE: Fan Temp (Integer)
-  EEPROM.write(9, 80);  // STORE: Shutdown Temp (Integer)
-  EEPROM.write(10, 1);  // STORE: Enable WiFi (Boolean)
-  EEPROM.write(11, 1);  // STORE: Enable autoload (on by default)
-  EEPROM.write(12, 1);  // STORE: Charger/PSU Mode Selection (1 = Charger Mode)
-  EEPROM.write(13, 3);  // STORE: LCD backlight sleep timer (default: 3 = Daytime On)
-  EEPROM.write(14, 1);  // STORE: Onboard Telemetry
-  EEPROM.write(15, 1);  // STORE: Enable Bluetooth
-  
-  // 2. Inject New Battery Architecture Defaults
-  // This function will automatically calculate 12V AGM limits and save them to 
-  // EEPROM addresses 1, 2, 3, 4, 21, and 22 via your updated saveSettings() function.
-  applyBatteryPreset(TYPE_AGM_SEALED, 12); 
-
-  // Commit all EEPROM changes to flash memory
-  EEPROM.commit();
-
-  // 3. Clear Network and Lifetime Statistic Data
-  stats.begin("fugu-stats", false);
+  // 1. Wipe the core configuration namespace
+  stats.begin("fugu-cfg", false);
   stats.clear(); 
+  stats.end();
+
+  // 2. Reset all RAM variables to safe base defaults
+  currentCharging = 30.00;
+  enableFan = true;
+  temperatureFan = 50;
+  temperatureMax = 80;
+  enableWiFi = true;
+  flashMemLoad = true;
+  backlightSleepMode = 3;
+  serialTelemMode = 1;
+  enableBluetooth = true;
+  battPreset = 4; // Custom
+  sysVoltage = 12;
+  loadMode = 0;
+  manualLoadState = 0;
+  lvdDelay = 30000;
+  CC_Mode = 1;
+  overrideFan = false;
+  enableDynamicCooling = false;
+
+  // 3. Inject Battery Architecture Defaults to RAM
+  applyBatteryPreset(TYPE_AGM_SEALED, 12); 
   
-  // 4. Force Setup Wizard on next boot
+  // 4. Save these perfectly clean RAM variables straight to NVS
+  saveSettings(); 
+
+  // 5. Wipe Network/Lifetime Data & Force Setup Wizard
+  stats.begin("fugu-stats", false);
+  stats.clear();
   stats.putBool("isFirstBoot", true); 
-  stats.end(); // Always close Preferences when done
+  stats.end(); 
 
   resetWiFi();
   resetBlynk();
 
-  // 5. System Reboot UI
+  // 6. System Reboot UI
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print(" FACTORY RESET  ");
@@ -412,59 +417,75 @@ void factoryReset(){
 }
 
 void loadSettings(){ 
-  voltageBatteryMax   = EEPROM.read(1)  + (EEPROM.read(2)*.01);  // Load saved maximum battery voltage setting
-  voltageBatteryMin   = EEPROM.read(3)  + (EEPROM.read(4)*.01);  // Load saved minimum battery voltage setting
-  voltageBatteryFloat = EEPROM.read(21) + (EEPROM.read(22)*.01);
-  voltageLVD          = EEPROM.read(23) + (EEPROM.read(24)*0.01);
-  voltageLVR          = EEPROM.read(25) + (EEPROM.read(26)*0.01);
-  currentCharging     = EEPROM.read(5)  + (EEPROM.read(6)*.01);  // Load saved charging current setting
-  enableFan           = EEPROM.read(7);                          // Load saved fan enable settings
-  temperatureFan      = EEPROM.read(8);                          // Load saved fan temperature settings
-  temperatureMax      = EEPROM.read(9);                          // Load saved shutdown temperature settings
-  enableWiFi          = EEPROM.read(10);                         // Load saved WiFi enable settings  
-  flashMemLoad        = EEPROM.read(11);                         // Load saved flash memory autoload feature
-  backlightSleepMode  = EEPROM.read(13);                         // Load saved lcd backlight sleep timer
-  serialTelemMode     = EEPROM.read(14);                         // Load saved Onboard telemetry settings
-  enableBluetooth     = EEPROM.read(15);                         // Load saved Bluetooth enable setting
+  stats.begin("fugu-cfg", true); 
+  voltageBatteryMax   = stats.getFloat("vBatMax", 14.40);
+  voltageBatteryMin   = stats.getFloat("vBatMin", 10.00);
+  voltageBatteryFloat = stats.getFloat("vBatFlt", 13.50);
+  voltageLVD          = stats.getFloat("vLVD", 11.50);
+  voltageLVR          = stats.getFloat("vLVR", 12.50);
+  currentCharging     = stats.getFloat("iChg", 30.00);
+  enableFan           = stats.getBool("enFan", true);
+  temperatureFan      = stats.getInt("tFan", 50);
+  temperatureMax      = stats.getInt("tMax", 80);
+  enableWiFi          = stats.getBool("enWiFi", true);
+  flashMemLoad        = stats.getBool("enMem", true);
+  backlightSleepMode  = stats.getInt("lcdSlp", 3);
+  serialTelemMode     = stats.getInt("serMode", 1);
+  enableBluetooth     = stats.getBool("enBT", true);
+  battPreset          = stats.getInt("batPre", 4);
+  sysVoltage          = stats.getInt("sysV", 12);
+  loadMode            = stats.getInt("ldMode", 0);
+  manualLoadState     = stats.getInt("manLd", 0);
+  lvdDelay            = stats.getUInt("lvdDly", 30000); 
+  CC_Mode             = stats.getBool("ccMode", true);
+  overrideFan         = stats.getBool("ovrFan", false);
+  enableDynamicCooling= stats.getBool("dynFan", false);
+  stats.end();
+
+  // --- SAFETY CHECKS ---
+  if (battPreset > 4) battPreset = 4;
+  if (sysVoltage != 12 && sysVoltage != 24 && sysVoltage != 48) sysVoltage = 12;
+  if (lvdDelay > 254000) lvdDelay = 30000; 
+  if (CC_Mode > 1) CC_Mode = 1;
 }
 
 void saveSettings(){
-  conv1 = voltageBatteryMax*100;       //STORE: Maximum Battery Voltage (gets whole number)
-  conv2 = conv1%100;                   //STORE: Maximum Battery Voltage (gets decimal number and converts to a whole number)
-  EEPROM.write(1,voltageBatteryMax);
-  EEPROM.write(2,conv2);
-  conv1 = voltageBatteryMin*100;       //STORE: Minimum Battery Voltage (gets whole number)
-  conv2 = conv1%100;                   //STORE: Minimum Battery Voltage (gets decimal number and converts to a whole number)
-  EEPROM.write(3,voltageBatteryMin);
-  EEPROM.write(4,conv2);
-  conv1 = currentCharging*100;         //STORE: Charging Current
-  conv2 = conv1%100;
-  EEPROM.write(5,currentCharging);
-  EEPROM.write(6,conv2);
-  EEPROM.write(7,enableFan);           //STORE: Fan Enable
-  EEPROM.write(8,temperatureFan);      //STORE: Fan Temp
-  EEPROM.write(9,temperatureMax);      //STORE: Shutdown Temp
-  EEPROM.write(10,enableWiFi);         //STORE: Enable WiFi
-//EEPROM.write(11,flashMemLoad);       //STORE: Enable autoload (must be excluded from bulk save, uncomment under discretion)
-  EEPROM.write(13,backlightSleepMode); //STORE: LCD backlight sleep timer 
-  EEPROM.write(14,serialTelemMode);    //STORE: Onboard Telemetry setting 
-  EEPROM.write(15,enableBluetooth);
-  EEPROM.write(21, int(voltageBatteryFloat));
-  EEPROM.write(22, (voltageBatteryFloat - int(voltageBatteryFloat)) * 100);
-  EEPROM.write(23, int(voltageLVD));
-  EEPROM.write(24, (voltageLVD - int(voltageLVD)) * 100);
-  EEPROM.write(25, int(voltageLVR));
-  EEPROM.write(26, (voltageLVR - int(voltageLVR)) * 100);
-  EEPROM.commit();                     //Saves setting changes to flash memory
+  stats.begin("fugu-cfg", false); 
+  stats.putFloat("vBatMax", voltageBatteryMax);
+  stats.putFloat("vBatMin", voltageBatteryMin);
+  stats.putFloat("vBatFlt", voltageBatteryFloat);
+  stats.putFloat("vLVD", voltageLVD);
+  stats.putFloat("vLVR", voltageLVR);
+  stats.putFloat("iChg", currentCharging);
+  stats.putBool("enFan", enableFan);
+  stats.putInt("tFan", temperatureFan);
+  stats.putInt("tMax", temperatureMax);
+  stats.putBool("enWiFi", enableWiFi);
+  stats.putInt("lcdSlp", backlightSleepMode);
+  stats.putInt("serMode", serialTelemMode);
+  stats.putBool("enBT", enableBluetooth);
+  stats.putInt("batPre", battPreset);
+  stats.putInt("sysV", sysVoltage);
+  stats.putInt("ldMode", loadMode);
+  stats.putInt("manLd", manualLoadState);
+  stats.putUInt("lvdDly", lvdDelay); 
+  stats.putBool("ccMode", CC_Mode);
+  stats.putBool("ovrFan", overrideFan);
+  stats.putBool("dynFan", enableDynamicCooling);
+  stats.end();
 }
 void saveAutoloadSettings(){
-  EEPROM.write(11,flashMemLoad);       //STORE: Enable autoload
-  EEPROM.commit();                     //Saves setting changes to flash memory
+  stats.begin("fugu-cfg", false);
+  stats.putBool("enMem", flashMemLoad);
+  stats.end();
 }
 void initializeFlashAutoload(){
-  if(disableFlashAutoLoad==0){
-    flashMemLoad = EEPROM.read(11);       //Load saved autoload (must be excluded from bulk save, uncomment under discretion) 
-    if(flashMemLoad==1){loadSettings();}  //Load stored settings from flash memory  
+  if(disableFlashAutoLoad == 0){
+    stats.begin("fugu-cfg", true);
+    flashMemLoad = stats.getBool("enMem", true);
+    stats.end();
+    
+    if(flashMemLoad == 1){ loadSettings(); } 
   } 
 }
 void performOTAUpdate(String otaUrl)

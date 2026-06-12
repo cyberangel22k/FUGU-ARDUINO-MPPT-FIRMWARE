@@ -1,7 +1,7 @@
 #define BLYNK_TEMPLATE_ID "TMPL3EnLIFxE"
 #define BLYNK_TEMPLATE_NAME "Fugu MPPT"
-#define FIRMWARE_VERSION "2.0-beta"            //8 characters
-#define BLYNK_FIRMWARE_VERSION "2.0-beta"      //8 characters
+#define FIRMWARE_VERSION "2.3-beta"            //8 characters
+#define BLYNK_FIRMWARE_VERSION "2.3-beta"      //8 characters
 char
 blynk_auth[40]      = "your_blynk_auth";
 bool
@@ -12,7 +12,7 @@ shouldSaveConfig    = false;
 //==================================================================================================//
 String 
 firmwareInfo      = FIRMWARE_VERSION,
-firmwareDate      = "06/06/26",
+firmwareDate      = "06/12/26",
 firmwareContactR1 = "www.youtube.com/",  
 firmwareContactR2 = "TechBuilder     ",
 startDate         = "2026-01-01";
@@ -25,7 +25,6 @@ wizardDay         = 1;
 // You will have to download and install the following libraries below in order to program the MPPT //
 // unit. Visit TechBuilder's YouTube channel for the "MPPT" tutorial.                               //
 //============================================================================================= ====//
-#include <EEPROM.h>                 //SYSTEM PARAMETER  - EEPROM Library (By: Arduino)
 #include <Wire.h>                   //SYSTEM PARAMETER  - WIRE Library (By: Arduino)
 #include <SPI.h>                    //SYSTEM PARAMETER  - SPI Library (By: Arduino)
 #include <WiFi.h>                   //SYSTEM PARAMETER  - WiFi Library (By: Arduino)
@@ -45,6 +44,7 @@ LiquidCrystal_I2C lcd(0x27,16,2);   //SYSTEM PARAMETER  - Configure LCD RowCol S
 TaskHandle_t Core2;                 //SYSTEM PARAMETER  - Used for the ESP32 dual core operation
 Adafruit_ADS1115 ads;               //SYSTEM PARAMETER  - ADS1115 ADC Library (By: Adafruit)
 WidgetTerminal terminal(V0);
+BlynkTimer blynkTimer;
 
 //====================================== USER PARAMETERS ===========================================//
 // The parameters below are the default parameters used when the MPPT charger settings have not     //
@@ -56,16 +56,15 @@ WidgetTerminal terminal(V0);
 #define buck_EN         32          //SYSTEM PARAMETER - Buck MOSFET Driver Enable Pin
 #define LED             2           //SYSTEM PARAMETER - LED Indicator GPIO Pin
 #define FAN             16          //SYSTEM PARAMETER - Fan GPIO Pin
-#define ADC_ALERT       34
+#define FAN_FREQ        5000        //SYSTEM PARAMETER - 5kHz PWM Frequency
+#define FAN_RESOLUTION  8           //SYSTEM PARAMETER - 8-bit resolution (0-255 scaling)
+#define ADC_ALERT       34          //SYSTEM PARAMETER - 
 #define TempSensor      35          //SYSTEM PARAMETER - Temperature Sensor GPIO Pin
 #define Load            12
 #define buttonLeft      18          //SYSTEM PARAMETER - 
 #define buttonRight     17          //SYSTEM PARAMETER -
 #define buttonBack      19          //SYSTEM PARAMETER - 
 #define buttonSelect    23          //SYSTEM PARAMETER -
-#define FAN_PWM_CHANNEL 1           //SYSTEM PARAMETER - Dedicated ledc channel for the fan
-#define FAN_FREQ        5000        //SYSTEM PARAMETER - 5kHz PWM Frequency
-#define FAN_RESOLUTION  8           //SYSTEM PARAMETER - 8-bit resolution (0-255 scaling)
 #define BLYNK_PRINT Serial
 
 //====================================== USER PARAMETERS ==========================================//
@@ -76,6 +75,7 @@ WidgetTerminal terminal(V0);
 bool                                  
 MPPT_Mode               = 1,           //   USER PARAMETER - MPPT Tracking Algorithm active 
 output_Mode             = 1,           //   USER PARAMETER - Charger Mode  
+CC_Mode                 = 1,           //   USER PARAMETER - 1 = Limit Current, 0 = Max Harvest
 disableFlashAutoLoad    = 0,           //   USER PARAMETER - Forces the MPPT to not use flash saved settings, enabling this "1" defaults to programmed firmware settings.
 enablePPWM              = 1,           //   USER PARAMETER - Enables Predictive PWM, this accelerates regulation speed (only applicable for battery charging application)
 enableWiFi              = 1,           //   USER PARAMETER - Enable WiFi Connection
@@ -117,7 +117,7 @@ currentCharging         = 30.0000,     //   USER PARAMETER - Maximum Charging Cu
 electricalPrice         = 9.5000,      //   USER PARAMETER - Input electrical price per kWh (Dollar/kWh,Euro/kWh,Peso/kWh)
 lifetimeKwh             = 0.0;         //   USER PARAMETER - Lifetime harvested KW
 
-const unsigned long
+unsigned long
 lvdDelay                = 30000;       //   USER PARAMETER - 30 Second debounce timer for heavy inverter loads
 
 //================================= CHARGING STAGE PARAMETERS ===================================//
@@ -206,14 +206,11 @@ pwmMax                = 0,           // SYSTEM PARAMETER -
 pwmMaxLimited         = 0,           // SYSTEM PARAMETER -
 PWM                   = 0,           // SYSTEM PARAMETER -
 PPWM                  = 0,           // SYSTEM PARAMETER -
-pwmChannel            = 0,           // SYSTEM PARAMETER -
 batteryPercent        = 0,           // SYSTEM PARAMETER -
 errorCount            = 0,           // SYSTEM PARAMETER -
 menuPage              = 0,           // SYSTEM PARAMETER -
 subMenuPage           = 0,           // SYSTEM PARAMETER -
 ERR                   = 0,           // SYSTEM PARAMETER - 
-conv1                 = 0,           // SYSTEM PARAMETER -
-conv2                 = 0,           // SYSTEM PARAMETER -
 intTemp               = 0;           // SYSTEM PARAMETER -
 float
 VSI                   = 0.0000,      // SYSTEM PARAMETER - Raw input voltage sensor ADC voltage
@@ -321,12 +318,14 @@ void setup() {
   String bAuth = stats.getString("bAuth", "dummy_auth");
   strcpy(blynk_auth, bAuth.c_str());
   stats.end();
-  EEPROM.begin(512);
 
   //RUN SETUP WIZARD ON FIRST BOOT
   if(isFirstBoot) {
     runSetupWizard();
   }
+
+  // Attach the pushBlynkData function to run every 1000ms
+  blynkTimer.setInterval(1000L, pushBlynkData);
 
   //INITIALIZE AND LIOAD FLASH MEMORY DATA
   Serial.println("> Normal Boot Sequence Initiated");

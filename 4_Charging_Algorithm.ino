@@ -52,12 +52,10 @@ void Charging_Algorithm(){
       REC = 0;
       chargingState = 0;                                             // Reset charging state back to BULK/MPPT upon recovery
       buck_Disable();
-      
       Serial.println("> Solar Panel Detected");
       Serial.print("> Computing For Predictive PWM ");
       for(int i = 0; i < 40; i++){ Serial.print("."); delay(30); }                        
-      Serial.println("");                                                 
-      
+      Serial.println("");
       Read_Sensors();
       predictivePWM();
       PWM = PPWM; 
@@ -76,9 +74,16 @@ void Charging_Algorithm(){
         }
       }
       else if (chargingState == 1) { 
-        // ABSORPTION -> FLOAT Transition 
+        // ABSORPTION -> NEXT STAGE Transition 
         if ((millis() - absStartMillis >= absWindow) || (currentOutput < tailCurrentThresh && currentOutput > 0.05)) {
-          chargingState = 2;
+          
+          // *** CHEMISTRY BRANCHING LOGIC ***
+          if (battPreset == 0 || battPreset == 1) { 
+            chargingState = 3; // LITHIUM: Terminate charge completely
+          } else {
+            chargingState = 2; // LEAD-ACID / CUSTOM: Enter Float Mode
+          }
+          
         }
         // Safety Dropback to Bulk
         if (voltageOutput < (voltageBatteryMax - 1.0000)) {
@@ -86,40 +91,57 @@ void Charging_Algorithm(){
         }
       }
       else if (chargingState == 2) {
-        // FLOAT -> RE-BULK Transition 
+        // FLOAT -> RE-BULK Transition (Lead-Acid)
         if (voltageOutput < (voltageBatteryFloat - 0.5000)) {
+          chargingState = 0;
+        }
+      }
+      else if (chargingState == 3) {
+        // TERMINATED -> RE-BULK Transition (Lithium)
+        // Repurposes the "Float" variable to act as the Restart threshold
+        if (voltageOutput < voltageBatteryFloat) {
           chargingState = 0;
         }
       }
 
       // --- 2. STATE EXECUTION LOGIC ---
-      if (chargingState == 0) {                                                    // STATE 0: BULK STAGE (MPPT TRACKING)
-        if(currentOutput > currentCharging)         {PWM--;}                           
-        else if(voltageOutput > voltageBatteryMax)  {PWM--;}                           
-        else{                                                                      // MPPT P&O ALGORITHM
+      if (chargingState == 0) {                                                    
+        // STATE 0: BULK STAGE (MPPT TRACKING)
+        if(currentOutput > currentCharging)                         {PWM--;}                           
+        else if(voltageOutput > voltageBatteryMax)                  {PWM--;}                           
+        else{                    
+          // MPPT P&O ALGORITHM
           if(powerInput > powerInputPrev && voltageInput > voltageInputPrev)        {PWM--;}  
-          else if(powerInput > powerInputPrev && voltageInput < voltageInputPrev)   {PWM++;}  
+          else if(powerInput > powerInputPrev && voltageInput < voltageInputPrev)   {PWM++;} 
           else if(powerInput < powerInputPrev && voltageInput > voltageInputPrev)   {PWM++;}  
           else if(powerInput < powerInputPrev && voltageInput < voltageInputPrev)   {PWM--;}  
           else if(voltageOutput < voltageBatteryMax)                                {PWM++;}  
-          
+        
           powerInputPrev   = powerInput;
           voltageInputPrev = voltageInput;
         }   
       }
-      else if (chargingState == 1) {                                               // STATE 1: ABSORPTION STAGE 
-        if(currentOutput > currentCharging)          {PWM--;}                           
+      else if (chargingState == 1) {                                               
+        // STATE 1: ABSORPTION STAGE 
+        if(currentOutput > currentCharging)          {PWM--;}        
         else if(voltageOutput > voltageBatteryMax)   {PWM--;}                           
-        else if(voltageOutput < voltageBatteryMax)   {PWM++;}                           
+        else if(voltageOutput < voltageBatteryMax)   {PWM++;}                          
         else{}
       }
-      else if (chargingState == 2) {                                               // STATE 2: FLOAT STAGE 
-        if(currentOutput > currentCharging)          {PWM--;}                         
+      else if (chargingState == 2) {                                               
+        // STATE 2: FLOAT STAGE (LEAD-ACID ONLY)
+        if(currentOutput > currentCharging)          {PWM--;}  
         else if(voltageOutput > voltageBatteryFloat) {PWM--;}                   
         else if(voltageOutput < voltageBatteryFloat) {PWM++;}                         
         else{}
       }
-      PWM_Modulation();                                                            // Execute PWM                                                                      
+      else if (chargingState == 3) {
+        // STATE 3: CHARGE TERMINATION (LITHIUM ONLY)
+        // Set PWM to 0. The PWM_Modulation() function will automatically execute buck_Disable()
+        PWM = 0;
+      }
+      
+      PWM_Modulation(); // Execute PWM                                                                      
     }  
   }
 }
