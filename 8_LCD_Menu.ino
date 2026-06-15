@@ -333,9 +333,9 @@ void LCD_Menu(){
         if(digitalRead(buttonLeft) == 1 && menuLevel == 2)  { subMenuPage--; if(subMenuPage<0) subMenuPage=maxItems; while(digitalRead(buttonLeft)==1){} lcd.clear(); return; }
 
         if(subMenuPage == 0) {
-          lcd.setCursor(0,0); lcd.print("CHARGING CC MODE");
+          lcd.setCursor(0,0); lcd.print("CHARGING MODE   ");
           lcd.setCursor(0,1); if(menuLevel==3) lcd.print("> "); else lcd.print("= ");
-          if(CC_Mode==1) lcd.print("LIMIT CURRENT "); else lcd.print("MAX HARVEST   ");
+          if(CC_Mode==1) lcd.print("CHARGING OFF   "); else lcd.print("CHARGING ON    ");
           if(menuLevel == 2 && digitalRead(buttonSelect)==1) { menuLevel=3; while(digitalRead(buttonSelect)==1){} return; }
           else if(menuLevel == 3) {
             if(digitalRead(buttonRight)==1 || digitalRead(buttonLeft)==1){ CC_Mode = !CC_Mode; while(digitalRead(buttonRight)==1 || digitalRead(buttonLeft)==1){} return;}
