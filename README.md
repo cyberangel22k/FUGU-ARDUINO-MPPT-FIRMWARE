@@ -152,3 +152,7 @@ Update June 12, 2026 (Happy Indepence Day Philippines!!!)
 * Menu Execution Cleanup: Removed redundant execution strings and dead code from the LCD factory reset confirmation submenu to prevent system hang-ups and overlapping reboot commands.
 
 * Action Required: A factory reset is strictly required immediately after flashing this build to wipe out legacy EEPROM fragmentation and initialize the new key-value structure. Make sure to turn off Solar Input during this process as some values may read 255 and may damage your hardware.
+
+June 15, 2026
+
+* Changed default CC_mode to Maximum Charging Current.
