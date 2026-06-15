@@ -75,7 +75,7 @@ BlynkTimer blynkTimer;
 bool                                  
 MPPT_Mode               = 1,           //   USER PARAMETER - MPPT Tracking Algorithm active 
 output_Mode             = 1,           //   USER PARAMETER - Charger Mode  
-CC_Mode                 = 1,           //   USER PARAMETER - 1 = Limit Current, 0 = Max Harvest
+CC_Mode                 = 0,           //   USER PARAMETER - 1 = Limit Current, 0 = Max Harvest
 disableFlashAutoLoad    = 0,           //   USER PARAMETER - Forces the MPPT to not use flash saved settings, enabling this "1" defaults to programmed firmware settings.
 enablePPWM              = 1,           //   USER PARAMETER - Enables Predictive PWM, this accelerates regulation speed (only applicable for battery charging application)
 enableWiFi              = 1,           //   USER PARAMETER - Enable WiFi Connection
