@@ -386,7 +386,7 @@ void factoryReset(){
   loadMode = 0;
   manualLoadState = 0;
   lvdDelay = 30000;
-  CC_Mode = 1;
+  CC_Mode = 0;
   overrideFan = false;
   enableDynamicCooling = false;
 
@@ -437,7 +437,7 @@ void loadSettings(){
   loadMode            = stats.getInt("ldMode", 0);
   manualLoadState     = stats.getInt("manLd", 0);
   lvdDelay            = stats.getUInt("lvdDly", 30000); 
-  CC_Mode             = stats.getBool("ccMode", true);
+  CC_Mode             = stats.getBool("ccMode", false);
   overrideFan         = stats.getBool("ovrFan", false);
   enableDynamicCooling= stats.getBool("dynFan", false);
   stats.end();
