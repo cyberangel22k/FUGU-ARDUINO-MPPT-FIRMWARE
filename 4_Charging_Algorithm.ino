@@ -14,10 +14,15 @@ void buck_Disable(){
 }   
 
 void predictivePWM(){                                                                
-  if(voltageInput <= 0){ PPWM = 0; }                      
-  else{ PPWM = (PPWM_margin * pwmMax * voltageOutput) / (100.00 * voltageInput); }              
-  PPWM = constrain(PPWM, 0, pwmMaxLimited);
-}   
+  // PATCH: Restored the enablePPWM bypass for high-resistance batteries
+  if (enablePPWM == 1) {
+    if(voltageInput <= 0){ PPWM = 0; }                      
+    else{ PPWM = (PPWM_margin * pwmMax * voltageOutput) / (100.00 * voltageInput); }              
+    PPWM = constrain(PPWM, 0, pwmMaxLimited);
+  } else {
+    PPWM = 0; // Forces a slow, gentle soft-start from zero
+  }
+} 
 
 void PWM_Modulation(){
   predictivePWM();                                                   
@@ -46,23 +51,36 @@ void PWM_Modulation(){
 }
      
 void Charging_Algorithm(){
-  if(ERR > 0 || chargingPause == 1){ buck_Disable(); }               // ERROR PRESENT - Turn off MPPT buck 
+static bool wasPaused = false; // Memory flag to track menu entry/exit
+
+  if(ERR > 0 || chargingPause == 1){ 
+    buck_Disable();
+    if(chargingPause == 1) { wasPaused = true; } // Flag that we are in the menu
+  }               
   else{
-    if(REC == 1){                                                    // IUV RECOVERY 
+    // Combine IUV Recovery (REC) and Menu Resume (wasPaused) into one safe restart block
+    if(REC == 1 || wasPaused == true){                                                     
       REC = 0;
-      chargingState = 0;                                             // Reset charging state back to BULK/MPPT upon recovery
+      wasPaused = false; // Clear the flag
+      chargingState = 0;                                             
       buck_Disable();
-      Serial.println("> Solar Panel Detected");
+      
+      lcd.setBacklight(HIGH);
+      lcd.setCursor(0,0);
+      lcd.print("POWER SOURCE    ");
+      lcd.setCursor(0,1); lcd.print("DETECTED        ");
+      Serial.println("> Resuming Tracking Algorithm...");
       Serial.print("> Computing For Predictive PWM ");
       for(int i = 0; i < 40; i++){ Serial.print("."); delay(30); }                        
       Serial.println("");
+      
       Read_Sensors();
       predictivePWM();
       PWM = PPWM; 
       lcd.clear();
       prevLCDMillis = 0;
     }  
-    else{            
+    else{           
       // ================= MPPT & MULTI-STAGE CHARGING ALGORITHM ================= //
       
       // --- 1. STATE TRANSITION LOGIC ---
