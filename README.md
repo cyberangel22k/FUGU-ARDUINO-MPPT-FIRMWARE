@@ -156,3 +156,7 @@ Update June 12, 2026 (Happy Indepence Day Philippines!!!)
 June 15, 2026
 
 * Changed default CC_mode to Maximum Charging Current.
+
+June 23, 2026
+
+* Patched a bug that prevents charging in Lead Acid/Flooded batteries.
