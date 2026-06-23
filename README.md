@@ -139,6 +139,8 @@ Update June 6, 2026
 
 * Fixed remaining UI bugs encountered in the previous builds.
 
+* IR2104 Gate Driver Shoot-through Protection: Added a hardware-level safety mechanism essential for managing the high-side and low-side MOSFETs in your buck converter circuit.
+
 Update June 12, 2026 (Happy Indepence Day Philippines!!!)
 
 * Lithium Float Logic: Modified the charging state machine to automatically skip the Float charging stage when Lithium battery chemistries (e.g., LiFePO4, Li-ion) are selected. This prevents chronic micro-cycling at high voltages and protects the cells from degradation.
