@@ -1,7 +1,7 @@
 #define BLYNK_TEMPLATE_ID "TMPL3EnLIFxE"
 #define BLYNK_TEMPLATE_NAME "Fugu MPPT"
 #define FIRMWARE_VERSION "2.3-beta"            //8 characters
-#define BLYNK_FIRMWARE_VERSION "2.3-beta"      //8 characters
+#define BLYNK_FIRMWARE_VERSION "2.4-beta"      //8 characters
 char
 blynk_auth[40]      = "your_blynk_auth";
 bool
@@ -12,7 +12,7 @@ shouldSaveConfig    = false;
 //==================================================================================================//
 String 
 firmwareInfo      = FIRMWARE_VERSION,
-firmwareDate      = "06/12/26",
+firmwareDate      = "06/23/26",
 firmwareContactR1 = "www.youtube.com/",  
 firmwareContactR2 = "TechBuilder     ",
 startDate         = "2026-01-01";
